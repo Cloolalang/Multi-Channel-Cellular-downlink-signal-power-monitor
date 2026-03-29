@@ -109,6 +109,20 @@ uvicorn app.main:app --reload
 | `dashboard/app/` | FastAPI app, templates, static assets, serial worker |
 | `flows.json` | Widget / flow metadata consumed by the dashboard |
 
+## Quectel documentation (references)
+
+Serial commands used here (`AT+QRFTESTMODE`, `AT+QRXFTM`, and related FTM behaviour) are defined in Quectel’s factory-test documentation for **EC2x / EGxx**-class modules. A key reference is:
+
+- **Quectel_EC2x&EGxx_FTM_AT_Commands_Manual_V1.0_Preliminary_20190404.pdf** (filename may show a browser suffix such as `(3).pdf` if downloaded multiple times)—**FTM AT Commands Manual**, preliminary **2019-04-04**.
+
+For the same command set and updated PDFs, use Quectel’s official sources (registration / login is often required):
+
+- **[Quectel Download Zone](https://www.quectel.com/download-zone)** — search for *FTM*, *AT Commands*, and your module (e.g. **EC25**), and download the current **FTM AT Commands Manual**, **AT Commands Manual**, and any **RF FTM** / application notes for your firmware line.
+- **[RF FTM Application Note V1.0](https://www.quectel.com/download/quectel_ec2xeg2xeg9xem05_series_rf_ftm_application_note_v1-0)** (EC2x / EG2x / EG9x / EM05 series)—context on RF factory test mode (PDF behind login).
+- **[LTE EC25 series](https://www.quectel.com/product/lte-ec25-series/)** — product page and linked documentation.
+
+Always treat the **revision dated for your module firmware** as authoritative if it differs from older preliminary PDFs.
+
 ## TODO
 
 - Add a **smoothing** control in the Settings tab (e.g. adjustable filtering for RSSI/gauges/charts so the UI can trade responsiveness vs. stability).
