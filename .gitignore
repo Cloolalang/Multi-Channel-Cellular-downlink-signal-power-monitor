@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.eggs/
+
+# Local env & secrets
+.env
+.env.*
+flows_cred.json
+.flows_cred.json.backup
+.config.users.json
+.config.users.json.backup
+
+# App-local overrides
+powertest_dashboard/dashboard_config.json
+
+# Node
+node_modules/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Powertest — Sector 1 Phase 1</title>
+  <link rel="stylesheet" href="/static/app.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <h1>Sector 1 — Channels 0–13</h1>
+    <div class="meta">
+      <span>Serial: <span id="hdr-serial">{{ settings.serial_port }} @ {{ settings.baudrate }}</span></span>
+      <span id="hdr-mock" class="mock">{% if settings.mock_modem %}MOCK modem{% else %}HW modem{% endif %}</span>
+    </div>
+  </header>
+  <nav class="app-tabs" role="tablist" aria-label="Main">
+    <button type="button" class="app-tab app-tab--active" role="tab" aria-selected="true" data-tab="dashboard">Dashboard</button>
+    <button type="button" class="app-tab" role="tab" aria-selected="false" data-tab="settings">Settings</button>
+  </nav>
+  <div id="panel-dashboard" class="tab-panel tab-panel--active" role="tabpanel">
+    <main>{% block main %}{% endblock %}</main>
+  </div>
+  <div id="panel-settings" class="tab-panel is-hidden" role="tabpanel">
+    {% block settings %}{% endblock %}
+  </div>
+  <script src="/static/app.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

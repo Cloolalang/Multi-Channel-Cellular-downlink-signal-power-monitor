@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+{% macro render_controls_widget(w, snap) %}
+{% set _lbl = (w.label or "")|lower %}
+{% if w.type == "ui_button" and 'all' in _lbl and 'channel' in _lbl and 'off' in _lbl %}
+{% elif w.type == "ui_button" and 'pre-load' in _lbl and '6300' in (w.label or '') %}
+{% else %}
+{% set c = snap.controls %}
+<div class="nr-widget nr-control" data-widget-id="{{ w.id }}" data-type="{{ w.type }}">
+  {% if w.type == "ui_switch" and w.label == "All channels on/off" %}
+    <label class="field switch-row control-master">
+      <span class="label">{{ w.label }}</span>
+      <input type="checkbox" class="js-control-all"
+        {% if c.all_channels_on %}checked{% endif %}/>
+    </label>
+  {% elif w.type == "ui_button" %}
+    {% if 'clear' in _lbl and 'chart' in _lbl %}
+      {% set act = 'clear-charts' %}
+    {% elif 'zero' in _lbl and 'gauge' in _lbl %}
+      {% set act = 'zero-gauges' %}
+    {% elif 'pre-load' in _lbl and 'mno' in _lbl and 'common' in _lbl %}
+      {% set act = 'preload-mno-common' %}
+    {% else %}
+      {% set act = '' %}
+    {% endif %}
+    <button type="button" class="btn-control" {% if act %}data-control-action="{{ act }}"{% else %}disabled title="Not implemented in Powertest UI"{% endif %}>{{ w.label }}</button>
+  {% elif w.type == "ui_text" %}
+    {% if w.label == "Watchdog" %}
+    <div class="field ui-text control-static">
+      <span class="label">{{ w.label }}</span>
+      <span class="value js-ctrl-watchdog watchdog-indicator">{{ c.watchdog }}</span>
+    </div>
+    {% elif w.label == "UpTime" %}
+    <div class="field ui-text control-static">
+      <span class="label">{{ w.label }}</span>
+      <span class="value js-ctrl-uptime">{{ c.uptime }}</span>
+    </div>
+    {% elif 'scan count' in _lbl and 'since deploy' in _lbl %}
+    <div class="field ui-text control-static">
+      <span class="label">{{ w.label }}</span>
+      <span class="value js-ctrl-scan-count">{{ c.scan_count }}</span>
+    </div>
+    {% else %}
+    <div class="field ui-text control-static">
+      <span class="label">{{ w.label }}</span>
+      <span class="value">—</span>
+    </div>
+    {% endif %}
+  {% elif w.type == "ui_text_input" %}
+    {% if w.label == "Gauge Min" %}
+    <label class="field">
+      <span class="label">{{ w.label }}</span>
+      <input type="number" step="any" class="js-gauge-ctrl" data-field="gauge_min" placeholder="-30"
+        value="{% if c.gauge_min is not none %}{{ c.gauge_min }}{% endif %}"/>
+    </label>
+    {% elif w.label == "Gauge Max" %}
+    <label class="field">
+      <span class="label">{{ w.label }}</span>
+      <input type="number" step="any" class="js-gauge-ctrl" data-field="gauge_max" placeholder="25"
+        value="{% if c.gauge_max is not none %}{{ c.gauge_max }}{% endif %}"/>
+    </label>
+    {% elif w.label == "Gauge seg1" or w.label == "Gauge seg 1" %}
+    <label class="field">
+      <span class="label">{{ w.label }}</span>
+      <input type="number" step="any" class="js-gauge-ctrl" data-field="gauge_seg1" placeholder="optional"
+        value="{% if c.gauge_seg1 is not none %}{{ c.gauge_seg1 }}{% endif %}"/>
+    </label>
+    {% elif w.label == "Gauge seg 2" or w.label == "Gauge seg2" %}
+    <label class="field">
+      <span class="label">{{ w.label }}</span>
+      <input type="number" step="any" class="js-gauge-ctrl" data-field="gauge_seg2" placeholder="optional"
+        value="{% if c.gauge_seg2 is not none %}{{ c.gauge_seg2 }}{% endif %}"/>
+    </label>
+    {% else %}
+    <label class="field control-disabled">
+      <span class="label">{{ w.label }}</span>
+      <input type="text" disabled value="" title="Not mapped in Powertest UI"/>
+    </label>
+    {% endif %}
+  {% else %}
+    <div class="nr-unknown nr-control-skip">{{ w.type }}</div>
+  {% endif %}
+</div>
+{% endif %}
+{% endmacro %}
+
+{% macro render_widget(w, prefix, snap) %}
+{% set sec = snap.composite if prefix == 'composite' else snap[prefix] %}
+<div class="nr-widget" data-widget-id="{{ w.id }}" data-type="{{ w.type }}">
+  {% if w.type == "ui_switch" %}
+    <label class="field switch-row">
+      <span class="label">{{ w.label }}</span>
+      <input type="checkbox" class="js-ch"
+        data-channel="{{ prefix }}"
+        data-field="channel_enabled"
+        {% if sec.channel_enabled %}checked{% endif %}/>
+    </label>
+  {% elif w.type == "ui_text" %}
+    <div class="field ui-text">
+      <span class="label">{{ w.label }}</span>
+      <span class="value {% if w.label == 'Measurement count' %}js-meas-count{% endif %}" data-channel="{{ prefix }}">{% if w.label == "Measurement count" %}{{ sec.measurement_count }}{% else %}—{% endif %}</span>
+    </div>
+  {% elif w.type == "ui_text_input" %}
+    <label class="field">
+      <span class="label">{{ w.label }}</span>
+      {% if w.label == "Band" %}
+        <input type="number" class="js-ch" data-channel="{{ prefix }}" data-field="band_eutra" value="{{ sec.band_eutra }}"/>
+      {% elif w.label == "DL EARFCN" %}
+        <input type="number" class="js-ch" data-channel="{{ prefix }}" data-field="earfcn" value="{{ sec.earfcn }}"/>
+      {% elif 'Attenuation' in w.label or 'attenuation' in w.label %}
+        <input type="number" inputmode="decimal" step="any" min="0" class="js-ch" data-channel="{{ prefix }}" data-field="atten_db" value="{{ sec.atten_db }}"/>
+      {% else %}
+        <input type="text" disabled title="Map this field in app if needed"/>
+      {% endif %}
+    </label>
+  {% elif w.type == "ui_dropdown" %}
+    <label class="field">
+      <span class="label">{{ w.label }}</span>
+      {% if w.label == "Bandwidth" %}
+        <select class="js-ch" data-channel="{{ prefix }}" data-field="bw_mhz">
+          {% for o in w.options %}
+            <option value="{{ o.value }}" {% if sec.bw_mhz == (o.value | int) or sec.bw_mhz == o.value %}selected{% endif %}>{{ o.label }}</option>
+          {% endfor %}
+        </select>
+      {% elif w.label == "MNO" %}
+        <select class="js-ch" data-channel="{{ prefix }}" data-field="mno">
+          {% for o in w.options %}
+            <option value="{{ o.value }}" {% if sec.mno == o.value %}selected{% endif %}>{{ o.label }}</option>
+          {% endfor %}
+        </select>
+      {% endif %}
+    </label>
+  {% elif w.type == "ui_gauge" %}
+    <div class="gauge-wrap">
+      <div class="gauge-title">{{ w.title }}</div>
+      <div class="gauge-body js-gauge" data-channel="{{ prefix }}"
+           data-gauge-id="{{ w.id }}"
+           data-min="{{ w.min }}" data-max="{{ w.max }}"
+           {% if w.colors is defined and w.colors|length >= 3 %}
+           data-c0="{{ w.colors[0] }}" data-c1="{{ w.colors[1] }}" data-c2="{{ w.colors[2] }}"
+           {% endif %}
+           data-metric="{% if prefix == 'composite' %}{% if 'carreirs' in w.title or 'number' in (w.title|lower) %}carrier_count{% elif 'mW' in w.title %}composite_mw{% elif 'SD' in w.title %}composite_sd_10{% elif 'Avg' in w.title %}composite_avg_10{% else %}composite_dbm{% endif %}{% else %}{% if 'SD' in w.title %}rssi_sd{% elif 'Avg' in w.title %}rssi_avg{% else %}rssi_dbm{% endif %}{% endif %}">
+        <div class="gauge-bar" aria-hidden="true">
+          <div class="gauge-bar-track">
+            <div class="gauge-bar-fill"></div>
+          </div>
+        </div>
+        <span class="gauge-value">—</span>
+      </div>
+    </div>
+  {% elif w.type == "ui_chart" %}
+    {% if prefix == "composite" %}
+    <div class="chart-wrap">
+      <div class="chart-label">{{ w.label }}</div>
+      <canvas id="chart-{{ w.id }}" class="chart-canvas" data-channel="{{ prefix }}"
+              data-chart-kind="{% if 'All CC RSSI' in w.label %}all_cc_rssi{% elif 'SD' in w.label %}composite_sd{% elif 'Avg' in w.label %}composite_avg{% else %}composite_avg{% endif %}"
+              data-ymin="{{ w.ymin }}" data-ymax="{{ w.ymax }}"></canvas>
+    </div>
+    {% elif 'SD' in w.label or 'Avg' in w.label or 'average' in w.label.lower() %}
+    <div class="chart-wrap">
+      <div class="chart-label">{{ w.label }}</div>
+      <canvas id="chart-{{ w.id }}" class="chart-canvas" data-channel="{{ prefix }}"
+              data-chart-kind="{% if 'SD' in w.label %}rssi_sd{% else %}rssi_avg{% endif %}"
+              data-ymin="{{ w.ymin }}" data-ymax="{{ w.ymax }}"></canvas>
+    </div>
+    {% endif %}
+  {% else %}
+    <div class="nr-unknown">{{ w.type }} ({{ w.id }})</div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{% block main %}
+<section class="control-strip">
+  <article class="panel control-panel">
+    <h2>Controls</h2>
+    <p class="control-hint">Master switch and shortcuts match the Sector 1 <em>Controls</em> group from flows. Default <code>PT_SERIAL_PORT=COM40</code>, <code>PT_MOCK_MODEM=false</code>: real modem RX parses <code>+QRXFTM</code> (2nd value = RSSI dBm). Use <code>PT_MOCK_MODEM=true</code> for development without hardware. <code>AT+QRFTESTMODE</code> runs once at startup, then one <code>AT+QRXFTM</code> per enabled channel per pass, round-robin. <code>PT_MODEM_QRXFTM_SCAN=false</code> stops auto scans. <code>PT_SCAN_CHANNEL_DELAY_SEC</code> (default 1s) spaces each channel so the modem can answer before the next TX. <code>PT_SCAN_ROUND_DELAY_SEC</code> pauses after each full pass.</p>
+    <div class="control-actions">
+      {% if controls_widgets|length > 0 %}
+        {% for w in controls_widgets %}
+          {{ render_controls_widget(w, snap) }}
+        {% endfor %}
+      {% else %}
+        <label class="field switch-row control-master">
+          <span class="label">All channels on/off</span>
+          <input type="checkbox" class="js-control-all" {% if snap.controls.all_channels_on %}checked{% endif %}/>
+        </label>
+        <div class="field ui-text control-static">
+          <span class="label">Watchdog</span>
+          <span class="value js-ctrl-watchdog watchdog-indicator">{{ snap.controls.watchdog }}</span>
+        </div>
+        <div class="field ui-text control-static">
+          <span class="label">UpTime</span>
+          <span class="value js-ctrl-uptime">{{ snap.controls.uptime }}</span>
+        </div>
+        <div class="field ui-text control-static">
+          <span class="label">Scan Count (Since Deploy)</span>
+          <span class="value js-ctrl-scan-count">{{ snap.controls.scan_count }}</span>
+        </div>
+        <label class="field"><span class="label">Gauge Min</span>
+          <input type="number" step="any" class="js-gauge-ctrl" data-field="gauge_min" placeholder="-30"
+            value="{% if snap.controls.gauge_min is not none %}{{ snap.controls.gauge_min }}{% endif %}"/></label>
+        <label class="field"><span class="label">Gauge Max</span>
+          <input type="number" step="any" class="js-gauge-ctrl" data-field="gauge_max" placeholder="25"
+            value="{% if snap.controls.gauge_max is not none %}{{ snap.controls.gauge_max }}{% endif %}"/></label>
+        <label class="field"><span class="label">Gauge seg1</span>
+          <input type="number" step="any" class="js-gauge-ctrl" data-field="gauge_seg1" placeholder="optional"
+            value="{% if snap.controls.gauge_seg1 is not none %}{{ snap.controls.gauge_seg1 }}{% endif %}"/></label>
+        <label class="field"><span class="label">Gauge seg2</span>
+          <input type="number" step="any" class="js-gauge-ctrl" data-field="gauge_seg2" placeholder="optional"
+            value="{% if snap.controls.gauge_seg2 is not none %}{{ snap.controls.gauge_seg2 }}{% endif %}"/></label>
+        <button type="button" class="btn-control" data-control-action="clear-charts">Clear charts</button>
+        <button type="button" class="btn-control" data-control-action="zero-gauges">Zero gauges</button>
+        <button type="button" class="btn-control" data-control-action="preload-mno-common">Pre-load MNO Common</button>
+      {% endif %}
+    </div>
+  </article>
+</section>
+
+<section class="panels panels-channels">
+  {% for panel in channel_panels %}
+  <article class="panel" data-group="{{ panel.prefix }}">
+    <h2>{{ panel.title }}</h2>
+    <div class="widgets">
+      {% for w in panel.widgets %}
+        {{ render_widget(w, panel.prefix, snap) }}
+      {% endfor %}
+    </div>
+  </article>
+  {% endfor %}
+</section>
+
+<section class="composite-strip">
+  <article class="panel composite-panel">
+    <h2>Composit Power</h2>
+    <p class="composite-hint">Sums linear power from enabled channels (Ch0–Ch13 RSSI dBm). Enable any channel switches.</p>
+    <div class="widgets composite-widgets">
+      {% for w in composite_widgets %}
+        {{ render_widget(w, "composite", snap) }}
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="log">
+  <h3>AT log</h3>
+  <pre id="at-log" class="at-log"></pre>
+</section>
+{% endblock %}
+
+{% block settings %}
+<section class="settings-wrap">
+  <article class="panel settings-panel">
+    <h2>Connection &amp; timing</h2>
+    <p class="control-hint">Values are saved to <code>{{ dashboard_config_path }}</code>. Changing the serial port, baud rate, or mock mode reopens the port immediately. Timing values apply on the next scan or WebSocket tick.</p>
+    <form id="form-dashboard-config" class="settings-form">
+      <fieldset class="settings-fieldset">
+        <legend>Serial</legend>
+        <label class="field">
+          <span class="label">COM / serial port</span>
+          <input type="text" name="serial_port" required autocomplete="off"
+            value="{{ settings.serial_port }}" placeholder="COM40 or /dev/ttyUSB0"/>
+        </label>
+        <label class="field">
+          <span class="label">Baud rate</span>
+          <input type="number" name="baudrate" required min="300" step="300"
+            value="{{ settings.baudrate }}"/>
+        </label>
+        <label class="field switch-row">
+          <span class="label">Mock modem (no hardware)</span>
+          <input type="checkbox" name="mock_modem" {% if settings.mock_modem %}checked{% endif %}/>
+        </label>
+      </fieldset>
+      <fieldset class="settings-fieldset">
+        <legend>Timing</legend>
+        <label class="field">
+          <span class="label">Scan channel delay (s)</span>
+          <input type="number" name="scan_channel_delay_sec" min="0" step="0.1"
+            value="{{ settings.scan_channel_delay_sec }}"/>
+        </label>
+        <label class="field">
+          <span class="label">Scan round delay (s)</span>
+          <input type="number" name="scan_round_delay_sec" min="0" step="0.1"
+            value="{{ settings.scan_round_delay_sec }}"/>
+        </label>
+        <label class="field">
+          <span class="label">WebSocket push (Hz)</span>
+          <input type="number" name="ws_push_hz" min="0.1" step="0.5"
+            value="{{ settings.ws_push_hz }}"/>
+        </label>
+      </fieldset>
+      <div class="settings-actions">
+        <button type="submit" class="btn-control btn-settings-save">Save</button>
+        <span id="settings-save-status" class="settings-save-status" aria-live="polite"></span>
+      </div>
+    </form>
+  </article>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.__SNAP = {{ snap_json | safe }};
+  window.__CHANNELS = {{ channel_prefixes | tojson }};
+</script>
+{% endblock %}

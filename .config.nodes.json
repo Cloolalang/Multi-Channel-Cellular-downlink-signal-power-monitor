@@ -1,0 +1,1577 @@
+{
+    "node-red": {
+        "name": "node-red",
+        "version": "4.0.9",
+        "local": false,
+        "user": false,
+        "nodes": {
+            "junction": {
+                "name": "junction",
+                "types": [
+                    "junction"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\common\\05-junction.js"
+            },
+            "inject": {
+                "name": "inject",
+                "types": [
+                    "inject"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\common\\20-inject.js"
+            },
+            "debug": {
+                "name": "debug",
+                "types": [
+                    "debug"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\common\\21-debug.js"
+            },
+            "complete": {
+                "name": "complete",
+                "types": [
+                    "complete"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\common\\24-complete.js"
+            },
+            "catch": {
+                "name": "catch",
+                "types": [
+                    "catch"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\common\\25-catch.js"
+            },
+            "status": {
+                "name": "status",
+                "types": [
+                    "status"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\common\\25-status.js"
+            },
+            "link": {
+                "name": "link",
+                "types": [
+                    "link in",
+                    "link out",
+                    "link call"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\common\\60-link.js"
+            },
+            "comment": {
+                "name": "comment",
+                "types": [
+                    "comment"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\common\\90-comment.js"
+            },
+            "global-config": {
+                "name": "global-config",
+                "types": [
+                    "global-config"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\common\\91-global-config.js"
+            },
+            "unknown": {
+                "name": "unknown",
+                "types": [
+                    "unknown"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\common\\98-unknown.js"
+            },
+            "function": {
+                "name": "function",
+                "types": [
+                    "function"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\function\\10-function.js"
+            },
+            "switch": {
+                "name": "switch",
+                "types": [
+                    "switch"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\function\\10-switch.js"
+            },
+            "change": {
+                "name": "change",
+                "types": [
+                    "change"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\function\\15-change.js"
+            },
+            "range": {
+                "name": "range",
+                "types": [
+                    "range"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\function\\16-range.js"
+            },
+            "template": {
+                "name": "template",
+                "types": [
+                    "template"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\function\\80-template.js"
+            },
+            "delay": {
+                "name": "delay",
+                "types": [
+                    "delay"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\function\\89-delay.js"
+            },
+            "trigger": {
+                "name": "trigger",
+                "types": [
+                    "trigger"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\function\\89-trigger.js"
+            },
+            "exec": {
+                "name": "exec",
+                "types": [
+                    "exec"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\function\\90-exec.js"
+            },
+            "rbe": {
+                "name": "rbe",
+                "types": [
+                    "rbe"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\function\\rbe.js"
+            },
+            "tls": {
+                "name": "tls",
+                "types": [
+                    "tls-config"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\network\\05-tls.js"
+            },
+            "httpproxy": {
+                "name": "httpproxy",
+                "types": [
+                    "http proxy"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\network\\06-httpproxy.js"
+            },
+            "mqtt": {
+                "name": "mqtt",
+                "types": [
+                    "mqtt in",
+                    "mqtt out",
+                    "mqtt-broker"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\network\\10-mqtt.js"
+            },
+            "httpin": {
+                "name": "httpin",
+                "types": [
+                    "http in",
+                    "http response"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\network\\21-httpin.js"
+            },
+            "httprequest": {
+                "name": "httprequest",
+                "types": [
+                    "http request"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\network\\21-httprequest.js"
+            },
+            "websocket": {
+                "name": "websocket",
+                "types": [
+                    "websocket in",
+                    "websocket out",
+                    "websocket-listener",
+                    "websocket-client"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\network\\22-websocket.js"
+            },
+            "tcpin": {
+                "name": "tcpin",
+                "types": [
+                    "tcp in",
+                    "tcp out",
+                    "tcp request"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\network\\31-tcpin.js"
+            },
+            "udp": {
+                "name": "udp",
+                "types": [
+                    "udp in",
+                    "udp out"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\network\\32-udp.js"
+            },
+            "CSV": {
+                "name": "CSV",
+                "types": [
+                    "csv"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\parsers\\70-CSV.js"
+            },
+            "HTML": {
+                "name": "HTML",
+                "types": [
+                    "html"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\parsers\\70-HTML.js"
+            },
+            "JSON": {
+                "name": "JSON",
+                "types": [
+                    "json"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\parsers\\70-JSON.js"
+            },
+            "XML": {
+                "name": "XML",
+                "types": [
+                    "xml"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\parsers\\70-XML.js"
+            },
+            "YAML": {
+                "name": "YAML",
+                "types": [
+                    "yaml"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\parsers\\70-YAML.js"
+            },
+            "split": {
+                "name": "split",
+                "types": [
+                    "split",
+                    "join"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\sequence\\17-split.js"
+            },
+            "sort": {
+                "name": "sort",
+                "types": [
+                    "sort"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\sequence\\18-sort.js"
+            },
+            "batch": {
+                "name": "batch",
+                "types": [
+                    "batch"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\sequence\\19-batch.js"
+            },
+            "file": {
+                "name": "file",
+                "types": [
+                    "file",
+                    "file in"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\storage\\10-file.js"
+            },
+            "watch": {
+                "name": "watch",
+                "types": [
+                    "watch"
+                ],
+                "enabled": true,
+                "local": false,
+                "user": false,
+                "module": "node-red",
+                "file": "C:\\Users\\P\\AppData\\Roaming\\npm\\node_modules\\node-red\\node_modules\\@node-red\\nodes\\core\\storage\\23-watch.js"
+            }
+        }
+    },
+    "node-red-node-serialport": {
+        "name": "node-red-node-serialport",
+        "version": "1.0.1",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "serialport": {
+                "name": "serialport",
+                "types": [
+                    "serial in",
+                    "serial out",
+                    "serial request",
+                    "serial-port"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-node-serialport",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-node-serialport\\25-serial.js"
+            }
+        }
+    },
+    "dashboard-evi": {
+        "name": "dashboard-evi",
+        "version": "1.0.2",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "ui_base": {
+                "name": "ui_base",
+                "types": [
+                    "ui_base"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "dashboard-evi",
+                "file": "\\Users\\P\\.node-red\\node_modules\\dashboard-evi\\nodes\\ui_base.js"
+            },
+            "ui_button": {
+                "name": "ui_button",
+                "types": [
+                    "ui_button"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "dashboard-evi",
+                "file": "\\Users\\P\\.node-red\\node_modules\\dashboard-evi\\nodes\\ui_button.js"
+            },
+            "ui_dropdown": {
+                "name": "ui_dropdown",
+                "types": [
+                    "ui_dropdown"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "dashboard-evi",
+                "file": "\\Users\\P\\.node-red\\node_modules\\dashboard-evi\\nodes\\ui_dropdown.js"
+            },
+            "ui_switch": {
+                "name": "ui_switch",
+                "types": [
+                    "ui_switch"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "dashboard-evi",
+                "file": "\\Users\\P\\.node-red\\node_modules\\dashboard-evi\\nodes\\ui_switch.js"
+            },
+            "ui_slider": {
+                "name": "ui_slider",
+                "types": [
+                    "ui_slider"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "dashboard-evi",
+                "file": "\\Users\\P\\.node-red\\node_modules\\dashboard-evi\\nodes\\ui_slider.js"
+            },
+            "ui_numeric": {
+                "name": "ui_numeric",
+                "types": [
+                    "ui_numeric"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "dashboard-evi",
+                "file": "\\Users\\P\\.node-red\\node_modules\\dashboard-evi\\nodes\\ui_numeric.js"
+            },
+            "ui_text_input": {
+                "name": "ui_text_input",
+                "types": [
+                    "ui_text_input"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "dashboard-evi",
+                "file": "\\Users\\P\\.node-red\\node_modules\\dashboard-evi\\nodes\\ui_text_input.js"
+            },
+            "ui_date_picker": {
+                "name": "ui_date_picker",
+                "types": [
+                    "ui_date_picker"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "dashboard-evi",
+                "file": "\\Users\\P\\.node-red\\node_modules\\dashboard-evi\\nodes\\ui_date_picker.js"
+            },
+            "ui_colour_picker": {
+                "name": "ui_colour_picker",
+                "types": [
+                    "ui_colour_picker"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "dashboard-evi",
+                "file": "\\Users\\P\\.node-red\\node_modules\\dashboard-evi\\nodes\\ui_colour_picker.js"
+            },
+            "ui_form": {
+                "name": "ui_form",
+                "types": [
+                    "ui_form"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "dashboard-evi",
+                "file": "\\Users\\P\\.node-red\\node_modules\\dashboard-evi\\nodes\\ui_form.js"
+            },
+            "ui_text": {
+                "name": "ui_text",
+                "types": [
+                    "ui_text"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "dashboard-evi",
+                "file": "\\Users\\P\\.node-red\\node_modules\\dashboard-evi\\nodes\\ui_text.js"
+            },
+            "ui_gauge": {
+                "name": "ui_gauge",
+                "types": [
+                    "ui_gauge"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "dashboard-evi",
+                "file": "\\Users\\P\\.node-red\\node_modules\\dashboard-evi\\nodes\\ui_gauge.js"
+            },
+            "ui_chart": {
+                "name": "ui_chart",
+                "types": [
+                    "ui_chart"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "dashboard-evi",
+                "file": "\\Users\\P\\.node-red\\node_modules\\dashboard-evi\\nodes\\ui_chart.js"
+            },
+            "ui_audio": {
+                "name": "ui_audio",
+                "types": [
+                    "ui_audio"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "dashboard-evi",
+                "file": "\\Users\\P\\.node-red\\node_modules\\dashboard-evi\\nodes\\ui_audio.js"
+            },
+            "ui_toast": {
+                "name": "ui_toast",
+                "types": [
+                    "ui_toast"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "dashboard-evi",
+                "file": "\\Users\\P\\.node-red\\node_modules\\dashboard-evi\\nodes\\ui_toast.js"
+            },
+            "ui_ui_control": {
+                "name": "ui_ui_control",
+                "types": [
+                    "ui_ui_control"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "dashboard-evi",
+                "file": "\\Users\\P\\.node-red\\node_modules\\dashboard-evi\\nodes\\ui_ui_control.js"
+            },
+            "ui_template": {
+                "name": "ui_template",
+                "types": [
+                    "ui_template"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "dashboard-evi",
+                "file": "\\Users\\P\\.node-red\\node_modules\\dashboard-evi\\nodes\\ui_template.js"
+            },
+            "ui_link": {
+                "name": "ui_link",
+                "types": [
+                    "ui_link"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "dashboard-evi",
+                "file": "\\Users\\P\\.node-red\\node_modules\\dashboard-evi\\nodes\\ui_link.js"
+            },
+            "ui_tab": {
+                "name": "ui_tab",
+                "types": [
+                    "ui_tab"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "dashboard-evi",
+                "file": "\\Users\\P\\.node-red\\node_modules\\dashboard-evi\\nodes\\ui_tab.js"
+            },
+            "ui_group": {
+                "name": "ui_group",
+                "types": [
+                    "ui_group"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "dashboard-evi",
+                "file": "\\Users\\P\\.node-red\\node_modules\\dashboard-evi\\nodes\\ui_group.js"
+            },
+            "ui_spacer": {
+                "name": "ui_spacer",
+                "types": [
+                    "ui_spacer"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "dashboard-evi",
+                "file": "\\Users\\P\\.node-red\\node_modules\\dashboard-evi\\nodes\\ui_spacer.js"
+            }
+        }
+    },
+    "node-red-contrib-input-split": {
+        "name": "node-red-contrib-input-split",
+        "version": "0.1.0",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "Input-split": {
+                "name": "Input-split",
+                "types": [
+                    "sqlarray",
+                    "Input Split"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-input-split",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-input-split\\split.js"
+            }
+        }
+    },
+    "node-red-contrib-play-sound": {
+        "name": "node-red-contrib-play-sound",
+        "version": "0.2.0",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "play-sound": {
+                "name": "play-sound",
+                "types": [
+                    "PlaySound"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-play-sound",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-play-sound\\node-red-contrib-play-sound.js"
+            }
+        }
+    },
+    "node-red-contrib-calc": {
+        "name": "node-red-contrib-calc",
+        "version": "1.0.6",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "math": {
+                "name": "math",
+                "types": [
+                    "calculator"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-calc",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-calc\\math.js"
+            }
+        }
+    },
+    "node-red-contrib-static": {
+        "name": "node-red-contrib-static",
+        "version": "1.1.0",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "static": {
+                "name": "static",
+                "types": [
+                    "static"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-static",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-static\\static.js"
+            }
+        }
+    },
+    "node-red-contrib-statistics": {
+        "name": "node-red-contrib-statistics",
+        "version": "2.2.2",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "statistics": {
+                "name": "statistics",
+                "types": [
+                    "statistics"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-statistics",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-statistics\\statistics.js"
+            }
+        }
+    },
+    "@racksync/node-red-contrib-moving-average": {
+        "name": "@racksync/node-red-contrib-moving-average",
+        "version": "0.0.5",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "Moving Average": {
+                "name": "Moving Average",
+                "types": [
+                    "sf:637727819e8b21c6"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "@racksync/node-red-contrib-moving-average",
+                "file": "\\Users\\P\\.node-red\\node_modules\\@racksync\\node-red-contrib-moving-average\\flows\\moving-average.js"
+            }
+        }
+    },
+    "node-red-contrib-protobuf": {
+        "name": "node-red-contrib-protobuf",
+        "version": "1.1.1",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "encode": {
+                "name": "encode",
+                "types": [
+                    "encode"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-protobuf",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-protobuf\\src\\nodes\\encode.js"
+            },
+            "decode": {
+                "name": "decode",
+                "types": [
+                    "decode"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-protobuf",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-protobuf\\src\\nodes\\decode.js"
+            },
+            "file": {
+                "name": "file",
+                "types": [
+                    "protobuf-file"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-protobuf",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-protobuf\\src\\nodes\\protofile.js"
+            }
+        }
+    },
+    "node-red-contrib-telnet-client": {
+        "name": "node-red-contrib-telnet-client",
+        "version": "1.0.4",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "telnet-connection": {
+                "name": "telnet-connection",
+                "types": [
+                    "telnet-connection"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-telnet-client",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-telnet-client\\telnet-connection.js"
+            },
+            "telnet-read": {
+                "name": "telnet-read",
+                "types": [
+                    "telnet-read"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-telnet-client",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-telnet-client\\telnet-read.js"
+            },
+            "telnet-send": {
+                "name": "telnet-send",
+                "types": [
+                    "telnet-send"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-telnet-client",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-telnet-client\\telnet-send.js"
+            },
+            "telnet-request": {
+                "name": "telnet-request",
+                "types": [
+                    "telnet-request"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-telnet-client",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-telnet-client\\telnet-request.js"
+            },
+            "telnet-echo": {
+                "name": "telnet-echo",
+                "types": [
+                    "telnet-echo"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-telnet-client",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-telnet-client\\telnet-echo.js"
+            }
+        }
+    },
+    "@korve/node-red-convert-unit": {
+        "name": "@korve/node-red-convert-unit",
+        "version": "0.0.2",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "convert-unit": {
+                "name": "convert-unit",
+                "types": [
+                    "convert-unit"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "@korve/node-red-convert-unit",
+                "file": "\\Users\\P\\.node-red\\node_modules\\@korve\\node-red-convert-unit\\convert-unit\\convert-unit.js"
+            }
+        }
+    },
+    "node-red-dashboard": {
+        "name": "node-red-dashboard",
+        "version": "2.30.0",
+        "local": true,
+        "user": false,
+        "nodes": {
+            "ui_base": {
+                "name": "ui_base",
+                "types": [
+                    "ui_base"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-dashboard",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-dashboard\\nodes\\ui_base.js"
+            },
+            "ui_button": {
+                "name": "ui_button",
+                "types": [
+                    "ui_button"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-dashboard",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-dashboard\\nodes\\ui_button.js"
+            },
+            "ui_dropdown": {
+                "name": "ui_dropdown",
+                "types": [
+                    "ui_dropdown"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-dashboard",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-dashboard\\nodes\\ui_dropdown.js"
+            },
+            "ui_switch": {
+                "name": "ui_switch",
+                "types": [
+                    "ui_switch"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-dashboard",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-dashboard\\nodes\\ui_switch.js"
+            },
+            "ui_slider": {
+                "name": "ui_slider",
+                "types": [
+                    "ui_slider"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-dashboard",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-dashboard\\nodes\\ui_slider.js"
+            },
+            "ui_numeric": {
+                "name": "ui_numeric",
+                "types": [
+                    "ui_numeric"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-dashboard",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-dashboard\\nodes\\ui_numeric.js"
+            },
+            "ui_text_input": {
+                "name": "ui_text_input",
+                "types": [
+                    "ui_text_input"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-dashboard",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-dashboard\\nodes\\ui_text_input.js"
+            },
+            "ui_date_picker": {
+                "name": "ui_date_picker",
+                "types": [
+                    "ui_date_picker"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-dashboard",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-dashboard\\nodes\\ui_date_picker.js"
+            },
+            "ui_colour_picker": {
+                "name": "ui_colour_picker",
+                "types": [
+                    "ui_colour_picker"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-dashboard",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-dashboard\\nodes\\ui_colour_picker.js"
+            },
+            "ui_form": {
+                "name": "ui_form",
+                "types": [
+                    "ui_form"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-dashboard",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-dashboard\\nodes\\ui_form.js"
+            },
+            "ui_text": {
+                "name": "ui_text",
+                "types": [
+                    "ui_text"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-dashboard",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-dashboard\\nodes\\ui_text.js"
+            },
+            "ui_gauge": {
+                "name": "ui_gauge",
+                "types": [
+                    "ui_gauge"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-dashboard",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-dashboard\\nodes\\ui_gauge.js"
+            },
+            "ui_chart": {
+                "name": "ui_chart",
+                "types": [
+                    "ui_chart"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-dashboard",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-dashboard\\nodes\\ui_chart.js"
+            },
+            "ui_audio": {
+                "name": "ui_audio",
+                "types": [
+                    "ui_audio"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-dashboard",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-dashboard\\nodes\\ui_audio.js"
+            },
+            "ui_toast": {
+                "name": "ui_toast",
+                "types": [
+                    "ui_toast"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-dashboard",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-dashboard\\nodes\\ui_toast.js"
+            },
+            "ui_ui_control": {
+                "name": "ui_ui_control",
+                "types": [
+                    "ui_ui_control"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-dashboard",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-dashboard\\nodes\\ui_ui_control.js"
+            },
+            "ui_template": {
+                "name": "ui_template",
+                "types": [
+                    "ui_template"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-dashboard",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-dashboard\\nodes\\ui_template.js"
+            },
+            "ui_link": {
+                "name": "ui_link",
+                "types": [
+                    "ui_link"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-dashboard",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-dashboard\\nodes\\ui_link.js"
+            },
+            "ui_tab": {
+                "name": "ui_tab",
+                "types": [
+                    "ui_tab"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-dashboard",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-dashboard\\nodes\\ui_tab.js"
+            },
+            "ui_group": {
+                "name": "ui_group",
+                "types": [
+                    "ui_group"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-dashboard",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-dashboard\\nodes\\ui_group.js"
+            },
+            "ui_spacer": {
+                "name": "ui_spacer",
+                "types": [
+                    "ui_spacer"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-dashboard",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-dashboard\\nodes\\ui_spacer.js"
+            }
+        }
+    },
+    "node-red-node-smooth": {
+        "name": "node-red-node-smooth",
+        "version": "0.1.2",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "smooth": {
+                "name": "smooth",
+                "types": [
+                    "smooth"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-node-smooth",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-node-smooth\\17-smooth.js"
+            }
+        }
+    },
+    "node-red-contrib-json2csv": {
+        "name": "node-red-contrib-json2csv",
+        "version": "0.0.3",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "json-2-csv": {
+                "name": "json-2-csv",
+                "types": [
+                    "json-2-csv"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-json2csv",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-json2csv\\nodes\\v1.js"
+            }
+        }
+    },
+    "node-red-contrib-moment": {
+        "name": "node-red-contrib-moment",
+        "version": "5.0.0",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "moment": {
+                "name": "moment",
+                "types": [
+                    "moment"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-moment",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-moment\\moment\\nrmoment.js"
+            },
+            "humanizer": {
+                "name": "humanizer",
+                "types": [
+                    "humanizer"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-moment",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-moment\\moment\\nrhumanizer.js"
+            }
+        }
+    },
+    "node-red-contrib-ui-led-fork": {
+        "name": "node-red-contrib-ui-led-fork",
+        "version": "0.3.1",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "ui_led": {
+                "name": "ui_led",
+                "types": [
+                    "ui_led"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-ui-led-fork",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-ui-led-fork\\led.js"
+            }
+        }
+    },
+    "ttb-node-red-counter": {
+        "name": "ttb-node-red-counter",
+        "version": "0.1.0",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "counter": {
+                "name": "counter",
+                "types": [
+                    "counter"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "ttb-node-red-counter",
+                "file": "\\Users\\P\\.node-red\\node_modules\\ttb-node-red-counter\\counter.js"
+            }
+        }
+    },
+    "node-red-contrib-frequency-meter": {
+        "name": "node-red-contrib-frequency-meter",
+        "version": "0.0.1",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "frequency-meter": {
+                "name": "frequency-meter",
+                "types": [
+                    "frequency"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-frequency-meter",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-frequency-meter\\frequency-meter.js"
+            }
+        }
+    },
+    "node-red-contrib-msg-speed": {
+        "name": "node-red-contrib-msg-speed",
+        "version": "2.1.0",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "msg-speed": {
+                "name": "msg-speed",
+                "types": [
+                    "msg-speed"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-msg-speed",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-msg-speed\\msg_speed.js"
+            }
+        }
+    },
+    "node-red-contrib-speedtest-updated": {
+        "name": "node-red-contrib-speedtest-updated",
+        "version": "2.0.2",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "speedtest": {
+                "name": "speedtest",
+                "types": [
+                    "speedtest"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-speedtest-updated",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-speedtest-updated\\speedtest.js"
+            }
+        }
+    },
+    "node-red-node-ping": {
+        "name": "node-red-node-ping",
+        "version": "0.3.3",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "ping": {
+                "name": "ping",
+                "types": [
+                    "ping"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-node-ping",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-node-ping\\88-ping.js"
+            }
+        }
+    },
+    "node-red-node-ui-table": {
+        "name": "node-red-node-ui-table",
+        "version": "0.4.3",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "ui_table": {
+                "name": "ui_table",
+                "types": [
+                    "ui_table"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-node-ui-table",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-node-ui-table\\node.js"
+            }
+        }
+    },
+    "node-red-contrib-scrape-it": {
+        "name": "node-red-contrib-scrape-it",
+        "version": "1.0.6",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "scrape-it": {
+                "name": "scrape-it",
+                "types": [
+                    "scrape"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-scrape-it",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-scrape-it\\scrape-it.js"
+            }
+        }
+    },
+    "node-red-contrib-simple-gate": {
+        "name": "node-red-contrib-simple-gate",
+        "version": "0.5.2",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "gate": {
+                "name": "gate",
+                "types": [
+                    "gate"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-simple-gate",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-simple-gate\\gate.js"
+            }
+        }
+    },
+    "node-red-contrib-influxdb": {
+        "name": "node-red-contrib-influxdb",
+        "version": "0.7.0",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "influxdb": {
+                "name": "influxdb",
+                "types": [
+                    "influxdb",
+                    "influxdb out",
+                    "influxdb batch",
+                    "influxdb in"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-influxdb",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-influxdb\\influxdb.js"
+            }
+        }
+    },
+    "node-red-contrib-web-page-screenshot": {
+        "name": "node-red-contrib-web-page-screenshot",
+        "version": "0.2.2",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "screenshot": {
+                "name": "screenshot",
+                "types": [
+                    "screenshot"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-web-page-screenshot",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-web-page-screenshot\\screenshot.js"
+            },
+            "screenshot-class": {
+                "name": "screenshot-class",
+                "types": [
+                    "screenshot-class"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-web-page-screenshot",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-web-page-screenshot\\screenshot-class.js"
+            },
+            "screenshot-id": {
+                "name": "screenshot-id",
+                "types": [
+                    "screenshot-id"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-web-page-screenshot",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-web-page-screenshot\\screenshot-id.js"
+            }
+        }
+    },
+    "node-red-contrib-hera-screenshot": {
+        "name": "node-red-contrib-hera-screenshot",
+        "version": "1.0.1",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "hera-screenshot": {
+                "name": "hera-screenshot",
+                "types": [
+                    "hera-screenshot"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-hera-screenshot",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-hera-screenshot\\screenshot\\screenshot.js"
+            }
+        }
+    },
+    "node-red-contrib-flatter": {
+        "name": "node-red-contrib-flatter",
+        "version": "1.1.1",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "flat": {
+                "name": "flat",
+                "types": [
+                    "flat"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-flatter",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-flatter\\flatter.js"
+            },
+            "unflat": {
+                "name": "unflat",
+                "types": [
+                    "unflat"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-flatter",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-flatter\\unflatter.js"
+            }
+        }
+    },
+    "node-red-node-ui-lineargauge": {
+        "name": "node-red-node-ui-lineargauge",
+        "version": "0.3.7",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "ui_lineargauge": {
+                "name": "ui_lineargauge",
+                "types": [
+                    "ui_lineargauge"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-node-ui-lineargauge",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-node-ui-lineargauge\\linear_gauge.js"
+            }
+        }
+    },
+    "node-red-contrib-convert": {
+        "name": "node-red-contrib-convert",
+        "version": "1.0.5",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "sample": {
+                "name": "sample",
+                "types": [
+                    "convert"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-convert",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-convert\\convert\\convert.js"
+            }
+        }
+    },
+    "node-red-contrib-message-sequencer": {
+        "name": "node-red-contrib-message-sequencer",
+        "version": "1.0.1",
+        "local": true,
+        "user": true,
+        "nodes": {
+            "message-sequencer": {
+                "name": "message-sequencer",
+                "types": [
+                    "sequencer-player",
+                    "sequencer-recorder"
+                ],
+                "enabled": true,
+                "local": true,
+                "user": false,
+                "module": "node-red-contrib-message-sequencer",
+                "file": "\\Users\\P\\.node-red\\node_modules\\node-red-contrib-message-sequencer\\message-sequencer.js"
+            }
+        }
+    }
+}
