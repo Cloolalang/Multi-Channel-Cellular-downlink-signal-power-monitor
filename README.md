@@ -17,6 +17,8 @@ There is also **Node-RED** related material (`flows.json`, `package.json`, `node
 
 This project has been tested on a **Quectel EC25** modem on **Windows**, using **Waveshare** USB drivers for the USB–serial link. Other Quectel modules and host OSes may work if the serial port enumerates correctly and AT commands behave as expected.
 
+The modem is operated in **factory RF test mode** (Quectel test commands such as `AT+QRFTESTMODE` / `AT+QRXFTM`) **without a SIM card**—downlink power is measured via the test/measurement path, not via normal network registration.
+
 ### RF path and power levels (DAS / repeater)
 
 The reference bench setup uses a **large fixed RF power attenuator** between the **DAS or repeater downlink output** (levels up to about **+25 dBm**) and the EC25 measurement path, so the modem sees safe in-band power. **Displayed measurements are offset in software** to account for this: per-channel **attenuation** in the UI plus **EC25 band calibration** (`dashboard/app/ec25_calibration.py`) are applied to raw `+QRXFTM` RSSI so reported dBm matches the intended reference (after the fixed front-end). If your splitter, cabling, or attenuator differs from that design, adjust per-channel attenuation in the dashboard so totals stay correct.
