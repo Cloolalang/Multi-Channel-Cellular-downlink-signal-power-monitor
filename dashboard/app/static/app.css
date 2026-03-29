@@ -26,9 +26,29 @@ body {
   gap: 0.5rem;
 }
 
-.topbar h1 { font-size: 1.1rem; margin: 0; font-weight: 600; }
+.topbar h1 { font-size: 1.05rem; margin: 0; font-weight: 600; line-height: 1.25; }
 
-.meta { display: flex; gap: 1rem; font-size: 0.85rem; opacity: 0.95; }
+.topbar-brand { min-width: 0; flex: 1; }
+
+.topbar-sub {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: 500;
+}
+
+.version-badge {
+  display: inline-block;
+  margin-right: 0.5rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.meta { display: flex; gap: 1rem; font-size: 0.85rem; opacity: 0.95; flex-shrink: 0; }
 .mock { font-weight: 600; }
 
 .app-tabs {

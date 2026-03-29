@@ -129,12 +129,12 @@ async def _reconnect_serial() -> None:
     )
     async with runtime.lock:
         runtime.at_log.append(
-            f"[powertest] Reconnected — port {settings.serial_port} @ {settings.baudrate} baud, "
+            f"[mc-dspm] Reconnected — port {settings.serial_port} @ {settings.baudrate} baud, "
             f"MOCK={settings.mock_modem}."
         )
         if not settings.mock_modem and serial_worker.ser is None:
             runtime.at_log.append(
-                "[powertest] Serial open failed — UI uses synthetic RSSI until the port is available."
+                "[mc-dspm] Serial open failed — UI uses synthetic RSSI until the port is available."
             )
     if not settings.mock_modem and serial_worker.ser is not None:
         await _modem_qrftestmode_prep()
@@ -199,7 +199,7 @@ async def _channel_measurement_loop() -> None:
         return
     async with runtime.lock:
         runtime.at_log.append(
-            "[powertest] AT+QRXFTM round-robin: one command per enabled channel per pass; "
+            "[mc-dspm] AT+QRXFTM round-robin: one command per enabled channel per pass; "
             f"PT_SCAN_CHANNEL_DELAY_SEC={settings.scan_channel_delay_sec}s between channels."
         )
     while True:
@@ -232,7 +232,7 @@ async def _channel_measurement_loop() -> None:
                 await asyncio.sleep(0.5)
         except Exception as e:
             async with runtime.lock:
-                runtime.at_log.append(f"[powertest] scan loop error: {e!r}")
+                runtime.at_log.append(f"[mc-dspm] scan loop error: {e!r}")
             await asyncio.sleep(1.0)
 
 
@@ -286,7 +286,7 @@ async def lifespan(app: FastAPI):
             runtime.channels[p].channel_enabled = True
         if _mno_common_preset is not None:
             runtime.apply_mno_common_preset(_mno_common_preset)
-            runtime.at_log.append("[powertest] MNO Common preset applied from flows.json (startup).")
+            runtime.at_log.append("[mc-dspm] MNO Common preset applied from flows.json (startup).")
         else:
             for p in channel_prefixes():
                 runtime.channels[p].sync_atten_from_band_ec25()
@@ -315,7 +315,7 @@ async def lifespan(app: FastAPI):
                 " Serial open failed — UI uses synthetic RSSI until the port is available."
             )
         runtime.at_log.append(
-            f"[powertest] Ready — port {settings.serial_port} @ {settings.baudrate} baud, "
+            f"[mc-dspm] Ready — port {settings.serial_port} @ {settings.baudrate} baud, "
             f"MOCK={settings.mock_modem}.{rx_note}"
         )
     yield
@@ -323,7 +323,11 @@ async def lifespan(app: FastAPI):
         serial_worker.ser.close()
 
 
-app = FastAPI(title="Powertest Phase1", lifespan=lifespan)
+app = FastAPI(
+    title="Multi-Channel Cellular Downlink Signal Power Monitor",
+    version="1.0-beta",
+    lifespan=lifespan,
+)
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 

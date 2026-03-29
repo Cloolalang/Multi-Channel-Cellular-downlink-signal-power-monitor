@@ -1,4 +1,4 @@
-"""Extract ui_* nodes for Channel 0 / Channel 1 groups from Powertest flows.json."""
+"""Extract ui_* nodes for Channel 0 / Channel 1 groups from flows.json (MC-DSPM)."""
 import json
 import sys
 from pathlib import Path

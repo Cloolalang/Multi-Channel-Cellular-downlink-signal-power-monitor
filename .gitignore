@@ -15,7 +15,7 @@ flows_cred.json
 .config.users.json.backup
 
 # App-local overrides
-powertest_dashboard/dashboard_config.json
+dashboard/dashboard_config.json
 
 # Node
 node_modules/

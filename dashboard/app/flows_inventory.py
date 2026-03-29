@@ -1,4 +1,4 @@
-"""Load Phase-1 ui_* definitions from Powertest flows.json."""
+"""Load Phase-1 ui_* definitions from flows.json (MC-DSPM dashboard)."""
 from __future__ import annotations
 
 import json

@@ -3,13 +3,16 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Powertest — Sector 1 Phase 1</title>
+  <title>Multi-Channel Cellular Downlink Signal Power Monitor — v1.0 beta</title>
   <link rel="stylesheet" href="/static/app.css"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <header class="topbar">
-    <h1>Sector 1 — Channels 0–13</h1>
+    <div class="topbar-brand">
+      <h1>Multi-Channel Cellular Downlink Signal Power Monitor</h1>
+      <p class="topbar-sub"><span class="version-badge">v1.0 beta</span> Sector 1 — Channels 0–13</p>
+    </div>
     <div class="meta">
       <span>Serial: <span id="hdr-serial">{{ settings.serial_port }} @ {{ settings.baudrate }}</span></span>
       <span id="hdr-mock" class="mock">{% if settings.mock_modem %}MOCK modem{% else %}HW modem{% endif %}</span>

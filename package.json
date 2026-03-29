@@ -1,7 +1,7 @@
 {
-    "name": "node-red-project",
-    "description": "A Node-RED Project",
-    "version": "0.0.1",
+    "name": "multi-channel-cellular-downlink-signal-power-monitor",
+    "description": "Multi-Channel Cellular Downlink Signal Power Monitor (Node-RED flows)",
+    "version": "1.0.0-beta",
     "private": true,
     "dependencies": {
         "@korve/node-red-convert-unit": "~0.0.2",

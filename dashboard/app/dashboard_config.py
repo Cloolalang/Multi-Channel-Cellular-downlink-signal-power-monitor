@@ -1,4 +1,4 @@
-"""Persist dashboard connection/timing overrides in powertest_dashboard/dashboard_config.json."""
+"""Persist dashboard connection/timing overrides (Multi-Channel Cellular Downlink Signal Power Monitor)."""
 from __future__ import annotations
 
 import json

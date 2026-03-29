@@ -22,7 +22,7 @@
     {% else %}
       {% set act = '' %}
     {% endif %}
-    <button type="button" class="btn-control" {% if act %}data-control-action="{{ act }}"{% else %}disabled title="Not implemented in Powertest UI"{% endif %}>{{ w.label }}</button>
+    <button type="button" class="btn-control" {% if act %}data-control-action="{{ act }}"{% else %}disabled title="Not implemented in this dashboard"{% endif %}>{{ w.label }}</button>
   {% elif w.type == "ui_text" %}
     {% if w.label == "Watchdog" %}
     <div class="field ui-text control-static">
@@ -73,7 +73,7 @@
     {% else %}
     <label class="field control-disabled">
       <span class="label">{{ w.label }}</span>
-      <input type="text" disabled value="" title="Not mapped in Powertest UI"/>
+      <input type="text" disabled value="" title="Not mapped in this dashboard"/>
     </label>
     {% endif %}
   {% else %}

@@ -1,8 +1,10 @@
-# Powertest
+# Multi-Channel Cellular Downlink Signal Power Monitor
+
+**Version:** 1.0 beta  
 
 **GitHub:** [Cloolalang/Multi-Channel-Cellular-downlink-signal-power-monitor](https://github.com/Cloolalang/Multi-Channel-Cellular-downlink-signal-power-monitor)
 
-This repository contains **Powertest**, a small stack for RF / modem bench work. The active web app is a **FastAPI** dashboard under `powertest_dashboard/` that talks to a Quectel modem over serial (or a mock for UI development), syncs layout from `flows.json`, and pushes live state over WebSockets.
+This repository is the **Multi-Channel Cellular Downlink Signal Power Monitor**: a small stack for RF / modem bench work. The active web app is a **FastAPI** dashboard under `dashboard/` that talks to a Quectel modem over serial (or a mock for UI development), syncs layout from `flows.json`, and pushes live state over WebSockets.
 
 There is also **Node-RED** related material (`flows.json`, `package.json`, `node_modules/`) used as reference or exported flows; day-to-day local development is usually the Python dashboard only.
 
@@ -21,12 +23,12 @@ There is also **Node-RED** related material (`flows.json`, `package.json`, `node
    ```
 
    - `flows.json` at the **repository root**
-   - `powertest_dashboard/` next to it (the app resolves `flows.json` relative to that folder)
+   - `dashboard/` next to it (the app resolves `flows.json` relative to that folder)
 
 2. **Create a virtual environment** (recommended):
 
    ```powershell
-   cd powertest_dashboard
+   cd dashboard
    python -m venv .venv
    .\.venv\Scripts\Activate.ps1
    ```
@@ -34,7 +36,7 @@ There is also **Node-RED** related material (`flows.json`, `package.json`, `node
    On Linux or macOS:
 
    ```bash
-   cd powertest_dashboard
+   cd dashboard
    python3 -m venv .venv
    source .venv/bin/activate
    ```
@@ -46,7 +48,7 @@ There is also **Node-RED** related material (`flows.json`, `package.json`, `node
    ```
 
 4. **Optional — environment file**  
-   Create `powertest_dashboard/.env` if you want to override defaults. All variables use the prefix **`PT_`** (see table below). Pydantic loads `.env` from the **current working directory** when you start the app, so run Uvicorn from `powertest_dashboard/` as shown below.
+   Create `dashboard/.env` if you want to override defaults. All variables use the prefix **`PT_`** (see table below). Pydantic loads `.env` from the **current working directory** when you start the app, so run Uvicorn from `dashboard/` as shown below.
 
 ## Configuration (`PT_*`)
 
@@ -63,11 +65,11 @@ There is also **Node-RED** related material (`flows.json`, `package.json`, `node
 | `PT_MODEM_QRXFTM_SCAN` | `true` | Continuous round-robin `AT+QRXFTM` per enabled channel |
 | `PT_FLOWS_JSON` | *(auto)* | Override path to `flows.json` if needed |
 
-**Dashboard Settings tab:** Open the **Settings** tab in the UI to set the COM port, baud rate, mock mode, and timing (scan delays, WebSocket Hz). Values are saved to `powertest_dashboard/dashboard_config.json` and override the same options from the environment for that process. Changing the serial port or mock mode **reopens** the port without restarting Uvicorn.
+**Dashboard Settings tab:** Open the **Settings** tab in the UI to set the COM port, baud rate, mock mode, and timing (scan delays, WebSocket Hz). Values are saved to `dashboard/dashboard_config.json` and override the same options from the environment for that process. Changing the serial port or mock mode **reopens** the port without restarting Uvicorn.
 
 ## Run the dashboard
 
-From **`powertest_dashboard/`**:
+From **`dashboard/`**:
 
 ```bash
 uvicorn app.main:app --reload
@@ -94,7 +96,7 @@ uvicorn app.main:app --reload
 
 | Path | Role |
 |------|------|
-| `powertest_dashboard/app/` | FastAPI app, templates, static assets, serial worker |
+| `dashboard/app/` | FastAPI app, templates, static assets, serial worker |
 | `flows.json` | Widget / flow metadata consumed by the dashboard |
 
 ## TODO
