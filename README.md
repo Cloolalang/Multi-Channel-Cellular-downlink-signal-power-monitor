@@ -13,6 +13,10 @@ There is also **Node-RED** related material (`flows.json`, `package.json`, `node
 - **Python 3.10+** (3.11+ recommended)
 - A **serial port** and Quectel modem when not using mock mode (Windows: e.g. `COM40`)
 
+### Tested hardware / drivers
+
+This project has been tested on a **Quectel EC25** modem on **Windows**, using **Waveshare** USB drivers for the USB–serial link. Other Quectel modules and host OSes may work if the serial port enumerates correctly and AT commands behave as expected.
+
 ## Setup
 
 1. **Clone** this repo (or copy it) so the layout stays:
