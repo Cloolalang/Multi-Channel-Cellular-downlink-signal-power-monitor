@@ -1,5 +1,7 @@
 # Multi-Channel Cellular Downlink Signal Power Monitor
 
+![Dashboard example](dashexample.JPG)
+
 **Version:** 1.0 beta  
 
 
