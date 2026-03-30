@@ -9,6 +9,7 @@ from typing import Any
 
 from app.ec25_calibration import atten_db_for_band
 from app.flows_inventory import CHANNEL_COUNT, MnoCommonPreset, channel_prefixes
+from app.settings import settings
 from app.quectel_maps import (
     build_qrxftm,
     bw_mhz_to_quectel,
@@ -19,6 +20,14 @@ from app.quectel_maps import (
 
 def _now() -> float:
     return time.time()
+
+
+def _rssi_smooth_window() -> int:
+    return max(1, min(int(settings.rssi_smooth_samples), 64))
+
+
+def _composite_smooth_window() -> int:
+    return max(1, min(int(settings.composite_smooth_samples), 512))
 
 
 def format_uptime_dhms(total_seconds: int) -> str:
@@ -59,12 +68,22 @@ class ChannelRuntime:
         """Set atten_db from EC25 band calibration (unknown bands → 0)."""
         self.atten_db = atten_db_for_band(self.band_eutra)
 
+    def clear_measurement_ui_state(self) -> None:
+        """Reset charts, counters, and stored RSSI when the channel is turned off."""
+        self.chart_rssi_avg.clear()
+        self.chart_rssi_sd.clear()
+        self.rssi_history.clear()
+        self.measurement_count = 0
+        self.rssi_dbm = -80.0
+
     def record_rssi_sample(self, rssi_dbm: float) -> None:
         """Apply one modem measurement (+QRXFTM second field, dBm); stored RSSI = raw + atten_db (positive atten)."""
+        if not self.channel_enabled:
+            return
         self.rssi_dbm = float(rssi_dbm) + self.atten_db
         self.rssi_history.append(self.rssi_dbm)
         t = _now()
-        avg, sd = self.rolling_mean_sd(5)
+        avg, sd = self.rolling_mean_sd(_rssi_smooth_window())
         self.chart_rssi_avg.append((t, avg))
         self.chart_rssi_sd.append((t, sd))
         self.measurement_count += 1
@@ -117,7 +136,7 @@ class AppRuntime:
     # One entry per AT+QRXFTM sent per channel step; +QRXFTM lines consume in order.
     qrxftm_expect: deque[str] = field(default_factory=lambda: deque(maxlen=256))
     # Composit Power (all CC): linear sum of mW from enabled carriers' RSSI (dBm).
-    _composite_ring: deque[float] = field(default_factory=lambda: deque(maxlen=32))
+    _composite_ring: deque[float] = field(default_factory=lambda: deque(maxlen=512))
     composite_dbm: float | None = None
     composite_mw: float = 0.0
     carrier_count: int = 0
@@ -166,7 +185,9 @@ class AppRuntime:
         ch = self.qrxftm_expect.popleft()
         if ch not in self.channels:
             return
-        self.channels[ch].record_rssi_sample(rssi)
+        ch_obj = self.channels[ch]
+        if ch_obj.channel_enabled:
+            ch_obj.record_rssi_sample(rssi)
 
     def update_composite(self) -> None:
         t = _now()
@@ -188,7 +209,8 @@ class AppRuntime:
         self.carrier_count = len(carriers)
         assert self.composite_dbm is not None
         self._composite_ring.append(self.composite_dbm)
-        window = list(self._composite_ring)[-10:]
+        cw = _composite_smooth_window()
+        window = list(self._composite_ring)[-cw:]
         self.composite_avg_10, self.composite_sd_10 = _mean_sd_last(window)
         self.chart_composite_avg.append((t, self.composite_avg_10))
         self.chart_composite_sd.append((t, self.composite_sd_10))
@@ -196,7 +218,7 @@ class AppRuntime:
         for p in channel_prefixes():
             ch = self.channels[p]
             if ch.channel_enabled:
-                a, _ = ch.rolling_mean_sd(5)
+                a, _ = ch.rolling_mean_sd(_rssi_smooth_window())
                 avgs.append(a)
         if avgs:
             self.chart_all_cc_rssi.append((t, sum(avgs) / len(avgs)))
@@ -240,7 +262,22 @@ class AppRuntime:
 
     def snapshot(self) -> dict[str, Any]:
         def pack_ch(ch: ChannelRuntime) -> dict[str, Any]:
-            avg, sd = ch.rolling_mean_sd(5)
+            if not ch.channel_enabled:
+                return {
+                    "channel_enabled": ch.channel_enabled,
+                    "band_eutra": ch.band_eutra,
+                    "earfcn": ch.earfcn,
+                    "bw_mhz": ch.bw_mhz,
+                    "mno": ch.mno,
+                    "atten_db": ch.atten_db,
+                    "measurement_count": ch.measurement_count,
+                    "rssi_dbm": None,
+                    "rssi_avg": None,
+                    "rssi_sd": None,
+                    "chart_rssi_avg": [],
+                    "chart_rssi_sd": [],
+                }
+            avg, sd = ch.rolling_mean_sd(_rssi_smooth_window())
             return {
                 "channel_enabled": ch.channel_enabled,
                 "band_eutra": ch.band_eutra,

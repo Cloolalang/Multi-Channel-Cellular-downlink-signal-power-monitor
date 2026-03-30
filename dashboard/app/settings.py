@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,6 +13,10 @@ class Settings(BaseSettings):
     # Set PT_MOCK_MODEM=true for UI dev without hardware (synthetic RSSI + fake OK on TX).
     mock_modem: bool = False
     ws_push_hz: float = 4.0
+    # Rolling mean / SD window for per-channel RSSI (gauges + charts). Max 64 matches rssi_history storage.
+    rssi_smooth_samples: int = Field(default=5, ge=1, le=64)
+    # Rolling window over composite dBm for composite avg/sd and composite charts.
+    composite_smooth_samples: int = Field(default=10, ge=1, le=512)
     # Minimum pause after each AT+QRXFTM before the next channel (lets modem finish +URC).
     # Set PT_SCAN_CHANNEL_DELAY_SEC=0 to disable (may desync or miss RSSI if too fast).
     scan_channel_delay_sec: float = 1.0

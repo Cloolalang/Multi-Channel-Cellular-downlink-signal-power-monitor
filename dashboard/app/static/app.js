@@ -104,6 +104,126 @@
       ? window.__CHANNELS
       : Array.from({ length: 14 }, (_, i) => "ch" + i);
 
+  function channelCount() {
+    return CHANNEL_KEYS.length;
+  }
+
+  function applyMnoPresetToForm(p) {
+    if (!p || !Array.isArray(window.__CHANNELS)) return;
+    const n = channelCount();
+    const band = p.band_eutra || [];
+    const ear = p.earfcn || [];
+    const bw = p.bw_mhz || [];
+    const mno = p.mno || [];
+    for (let i = 0; i < n; i++) {
+      const b = document.querySelector(`.js-mno-preset[data-field="band_eutra"][data-ch="${i}"]`);
+      if (b) b.value = band[i] == null || band[i] === "" ? "" : String(band[i]);
+      const e = document.querySelector(`.js-mno-preset[data-field="earfcn"][data-ch="${i}"]`);
+      if (e) e.value = ear[i] == null || ear[i] === "" ? "" : String(ear[i]);
+      const bwEl = document.querySelector(`.js-mno-preset[data-field="bw_mhz"][data-ch="${i}"]`);
+      if (bwEl) bwEl.value = bw[i] == null || bw[i] === "" ? "" : String(bw[i]);
+      const m = document.querySelector(`.js-mno-preset[data-field="mno"][data-ch="${i}"]`);
+      if (m) m.value = mno[i] == null || mno[i] === "" ? "" : String(mno[i]);
+    }
+  }
+
+  function collectMnoCommonPreset() {
+    const n = channelCount();
+    const band_eutra = [];
+    const earfcn = [];
+    const bw_mhz = [];
+    const mno = [];
+    for (let i = 0; i < n; i++) {
+      const bel = document.querySelector(`.js-mno-preset[data-field="band_eutra"][data-ch="${i}"]`);
+      const earEl = document.querySelector(`.js-mno-preset[data-field="earfcn"][data-ch="${i}"]`);
+      const bwEl = document.querySelector(`.js-mno-preset[data-field="bw_mhz"][data-ch="${i}"]`);
+      const mnoEl = document.querySelector(`.js-mno-preset[data-field="mno"][data-ch="${i}"]`);
+      const parseIntOrNull = (el) => {
+        if (!el) return null;
+        const s = String(el.value).trim();
+        if (s === "") return null;
+        const x = parseInt(s, 10);
+        return Number.isFinite(x) ? x : null;
+      };
+      band_eutra.push(parseIntOrNull(bel));
+      earfcn.push(parseIntOrNull(earEl));
+      if (!bwEl || String(bwEl.value).trim() === "") bw_mhz.push(null);
+      else {
+        const x = parseInt(String(bwEl.value), 10);
+        bw_mhz.push(Number.isFinite(x) ? x : null);
+      }
+      if (!mnoEl || String(mnoEl.value).trim() === "") mno.push(null);
+      else mno.push(String(mnoEl.value).trim());
+    }
+    return { band_eutra, earfcn, bw_mhz, mno };
+  }
+
+  function addBandAttenRow(tb, band, db) {
+    if (!tb) return;
+    const tr = document.createElement("tr");
+    tr.className = "js-band-atten-row";
+    const td1 = document.createElement("td");
+    const inpB = document.createElement("input");
+    inpB.type = "number";
+    inpB.step = "1";
+    inpB.className = "js-band-atten-band";
+    if (band !== "" && band != null) inpB.value = String(band);
+    td1.appendChild(inpB);
+    const td2 = document.createElement("td");
+    const inpD = document.createElement("input");
+    inpD.type = "number";
+    inpD.step = "any";
+    inpD.className = "js-band-atten-db";
+    if (db !== "" && db != null) inpD.value = String(db);
+    td2.appendChild(inpD);
+    const td3 = document.createElement("td");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn-control btn-band-atten-del";
+    btn.title = "Remove row";
+    btn.textContent = "×";
+    td3.appendChild(btn);
+    tr.appendChild(td1);
+    tr.appendChild(td2);
+    tr.appendChild(td3);
+    tb.appendChild(tr);
+  }
+
+  function applyBandAttenToForm(dict) {
+    const tb = document.getElementById("js-band-atten-tbody");
+    if (!tb || !dict) return;
+    tb.innerHTML = "";
+    const bands = Object.keys(dict)
+      .map((k) => parseInt(k, 10))
+      .filter((x) => Number.isFinite(x))
+      .sort((a, b) => a - b);
+    bands.forEach((b) => addBandAttenRow(tb, b, dict[String(b)]));
+  }
+
+  function collectBandAttenTable() {
+    const out = {};
+    document.querySelectorAll(".js-band-atten-row").forEach((row) => {
+      const bEl = row.querySelector(".js-band-atten-band");
+      const vEl = row.querySelector(".js-band-atten-db");
+      if (!bEl || !vEl) return;
+      const bs = String(bEl.value).trim();
+      const vs = String(vEl.value).trim();
+      if (bs === "" || vs === "") return;
+      const b = parseInt(bs, 10);
+      const v = parseFloat(vs);
+      if (!Number.isFinite(b) || !Number.isFinite(v)) return;
+      out[String(b)] = v;
+    });
+    return out;
+  }
+
+  function parseCfgNullableFloat(v) {
+    const s = String(v ?? "").trim();
+    if (s === "" || s === "-" || s === "." || s === "-.") return null;
+    const n = parseFloat(s);
+    return Number.isFinite(n) ? n : null;
+  }
+
   function gaugeGradient(el, bounds) {
     const c0 = el.dataset.c0 || "#e74c3c";
     const c1 = el.dataset.c1 || "#f1c40f";
@@ -252,9 +372,11 @@
         let v = d.rssi_dbm;
         if (m === "rssi_avg") v = d.rssi_avg;
         if (m === "rssi_sd") v = d.rssi_sd;
+        const raw = v;
+        if (v === null || v === undefined) v = "—";
         const gv = el.querySelector(".gauge-value");
         if (gv) gv.textContent = v;
-        updateGaugeBar(el, v);
+        updateGaugeBar(el, raw === null || raw === undefined ? "—" : raw);
       });
       document.querySelectorAll(`.js-meas-count[data-channel="${ch}"]`).forEach((el) => {
         el.textContent = d.measurement_count;
@@ -320,13 +442,6 @@
     }
 
     if (snap.controls) {
-      document.querySelectorAll(".js-gauge-ctrl").forEach((el) => {
-        const f = el.dataset.field;
-        if (!f || document.activeElement === el) return;
-        const v = snap.controls[f];
-        if (v === null || v === undefined) el.value = "";
-        else el.value = String(v);
-      });
       document.querySelectorAll(".js-ctrl-uptime").forEach((el) => {
         if (snap.controls.uptime != null) el.textContent = snap.controls.uptime;
       });
@@ -354,16 +469,6 @@
       body: JSON.stringify(body),
     });
   }, 250);
-
-  const patchGaugeRange = debounce(async (body) => {
-    const r = await fetch("/api/runtime/gauge-ranges", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const j = await r.json();
-    if (j.ok) applySnap(j);
-  }, 400);
 
   function readChannelFieldValue(el, field) {
     if (el.type === "checkbox") return el.checked;
@@ -393,18 +498,6 @@
         .then((j) => {
           if (j.ok) applySnap(j);
         });
-      return;
-    }
-    if (el.classList.contains("js-gauge-ctrl")) {
-      const field = el.dataset.field;
-      const s = String(el.value).trim();
-      const body = {};
-      if (s === "" || s === "-" || s === ".") body[field] = null;
-      else {
-        const n = parseFloat(s);
-        body[field] = Number.isFinite(n) ? n : null;
-      }
-      patchGaugeRange(body);
       return;
     }
     if (!el.classList.contains("js-ch")) return;
@@ -489,12 +582,30 @@
               const sc = f.querySelector('[name="scan_channel_delay_sec"]');
               const sr = f.querySelector('[name="scan_round_delay_sec"]');
               const wh = f.querySelector('[name="ws_push_hz"]');
+              const rss = f.querySelector('[name="rssi_smooth_samples"]');
+              const css = f.querySelector('[name="composite_smooth_samples"]');
               if (sp) sp.value = j.serial_port ?? "";
               if (bd) bd.value = j.baudrate ?? 115200;
               if (mk) mk.checked = !!j.mock_modem;
               if (sc) sc.value = j.scan_channel_delay_sec ?? 1;
               if (sr) sr.value = j.scan_round_delay_sec ?? 0;
               if (wh) wh.value = j.ws_push_hz ?? 4;
+              if (rss) rss.value = j.rssi_smooth_samples ?? 5;
+              if (css) css.value = j.composite_smooth_samples ?? 10;
+              if (j.mno_common_preset) applyMnoPresetToForm(j.mno_common_preset);
+              const gmn = f.querySelector('[name="cfg_gauge_min"]');
+              const gmx = f.querySelector('[name="cfg_gauge_max"]');
+              const gs1 = f.querySelector('[name="cfg_gauge_seg1"]');
+              const gs2 = f.querySelector('[name="cfg_gauge_seg2"]');
+              const setG = (el, val) => {
+                if (!el) return;
+                el.value = val == null || val === undefined ? "" : String(val);
+              };
+              setG(gmn, j.gauge_min);
+              setG(gmx, j.gauge_max);
+              setG(gs1, j.gauge_seg1);
+              setG(gs2, j.gauge_seg2);
+              if (j.band_attenuation_db) applyBandAttenToForm(j.band_attenuation_db);
             })
             .catch(() => {});
         }
@@ -517,6 +628,17 @@
         scan_channel_delay_sec: parseFloat(String(fd.get("scan_channel_delay_sec") || "1")),
         scan_round_delay_sec: parseFloat(String(fd.get("scan_round_delay_sec") || "0")),
         ws_push_hz: parseFloat(String(fd.get("ws_push_hz") || "4")),
+        rssi_smooth_samples: parseInt(String(fd.get("rssi_smooth_samples") || "5"), 10),
+        composite_smooth_samples: parseInt(
+          String(fd.get("composite_smooth_samples") || "10"),
+          10
+        ),
+        mno_common_preset: collectMnoCommonPreset(),
+        band_attenuation_db: collectBandAttenTable(),
+        gauge_min: parseCfgNullableFloat(fd.get("cfg_gauge_min")),
+        gauge_max: parseCfgNullableFloat(fd.get("cfg_gauge_max")),
+        gauge_seg1: parseCfgNullableFloat(fd.get("cfg_gauge_seg1")),
+        gauge_seg2: parseCfgNullableFloat(fd.get("cfg_gauge_seg2")),
       };
       if (!body.serial_port) {
         if (status) {
@@ -555,6 +677,20 @@
             status.className = "settings-save-status is-err";
           }
         });
+    });
+  })();
+
+  (function initBandAttenTableControls() {
+    const tb = document.getElementById("js-band-atten-tbody");
+    if (tb) {
+      tb.addEventListener("click", (e) => {
+        const btn = e.target.closest(".btn-band-atten-del");
+        if (btn) btn.closest("tr")?.remove();
+      });
+    }
+    document.getElementById("js-band-atten-add")?.addEventListener("click", () => {
+      const tbody = document.getElementById("js-band-atten-tbody");
+      if (tbody) addBandAttenRow(tbody, "", "");
     });
   })();
 

@@ -1,11 +1,12 @@
-# Multi-Channel Cellular Downlink Signal Power Monitor
+# Multi-Channel LTE (4G) Downlink Signal Power Monitor
 
 ![Dashboard example](dashexample.JPG)
 
 **Version:** 1.0 beta  
 
+**Scope:** This build targets **LTE (4G)** only—**E-UTRA** downlink factory test mode (`AT+QRXFTM` / `AT+QRFTESTMODE`). It is **not** aimed at NR (5G) stacks.
 
-This repository is the **Multi-Channel Cellular Downlink Signal Power Monitor**: a small stack for RF / modem bench work. The active web app is a **FastAPI** dashboard under `dashboard/` that talks to a Quectel modem over serial (or a mock for UI development), syncs layout from `flows.json`, and pushes live state over WebSockets.
+This repository is a small stack for RF / modem bench work. The active web app is a **FastAPI** dashboard under `dashboard/` that talks to a Quectel modem over serial (or a mock for UI development), syncs layout from `flows.json`, and pushes live state over WebSockets.
 
 There is also **Node-RED** related material (`flows.json`, `package.json`, `node_modules/`) used as reference or exported flows; day-to-day local development is usually the Python dashboard only.
 
@@ -22,7 +23,7 @@ The modem is operated in **factory RF test mode** (Quectel test commands such as
 
 ### RF path and power levels (DAS / repeater)
 
-The reference bench setup uses a **large fixed RF power attenuator** between the **DAS or repeater downlink output** (levels up to about **+25 dBm**) and the EC25 measurement path, so the modem sees safe in-band power. **Displayed measurements are offset in software** to account for this: per-channel **attenuation** in the UI plus **EC25 band calibration** (`dashboard/app/ec25_calibration.py`) are applied to raw `+QRXFTM` RSSI so reported dBm matches the intended reference (after the fixed front-end). If your splitter, cabling, or attenuator differs from that design, adjust per-channel attenuation in the dashboard so totals stay correct.
+The reference bench setup uses a **large fixed RF power attenuator** between the **DAS or repeater downlink output** (levels up to about **+25 dBm**) and the EC25 measurement path, so the modem sees safe in-band power. **Displayed measurements are offset in software** to account for this: per-channel **attenuation** in the UI plus **per-band calibration** (built-in defaults in `dashboard/app/ec25_calibration.py`, overridable per band in **Settings**) are applied to raw `+QRXFTM` RSSI so reported dBm matches the intended reference (after the fixed front-end). If your splitter, cabling, or attenuator differs from that design, adjust per-channel attenuation and/or the band table in **Settings** so totals stay correct.
 
 ## Setup
 
@@ -69,6 +70,8 @@ The reference bench setup uses a **large fixed RF power attenuator** between the
 | `PT_BAUDRATE` | `115200` | Modem baud rate |
 | `PT_MOCK_MODEM` | `false` | Set `true` for UI work without hardware (synthetic RSSI, fake OK on TX) |
 | `PT_WS_PUSH_HZ` | `4` | WebSocket snapshot cadence (Hz) |
+| `PT_RSSI_SMOOTH_SAMPLES` | `5` | Rolling window (samples) for per-channel RSSI avg/SD gauges and charts (1–64) |
+| `PT_COMPOSITE_SMOOTH_SAMPLES` | `10` | Rolling window over composite dBm for composite avg/SD and charts (1–512) |
 | `PT_SCAN_CHANNEL_DELAY_SEC` | `1` | Delay between `AT+QRXFTM` per channel on real serial (0 = no pause; may miss RSSI) |
 | `PT_SCAN_ROUND_DELAY_SEC` | `0` | Pause after each full channel round before the next |
 | `PT_MODEM_PREP_QRFTESTMODE` | `true` | Run `AT+QRFTESTMODE` prep after opening the port |
@@ -76,7 +79,22 @@ The reference bench setup uses a **large fixed RF power attenuator** between the
 | `PT_MODEM_QRXFTM_SCAN` | `true` | Continuous round-robin `AT+QRXFTM` per enabled channel |
 | `PT_FLOWS_JSON` | *(auto)* | Override path to `flows.json` if needed |
 
-**Dashboard Settings tab:** Open the **Settings** tab in the UI to set the COM port, baud rate, mock mode, and timing (scan delays, WebSocket Hz). Values are saved to `dashboard/dashboard_config.json` and override the same options from the environment for that process. Changing the serial port or mock mode **reopens** the port without restarting Uvicorn.
+Environment values are merged at startup; **`dashboard/dashboard_config.json`** (written from the **Settings** tab) overrides connection, timing, smoothing, gauge scale, **MNO Common** preset, and **band → attenuation** table for that install and is **reloaded on every app restart**.
+
+### Settings tab (`dashboard_config.json`)
+
+Open **Settings** in the UI to configure:
+
+- **Serial:** COM port, baud, mock mode (changing port/baud/mock **reopens** the serial port).
+- **Timing:** scan delays, WebSocket push rate.
+- **Smoothing:** per-channel RSSI window and composite power window (samples).
+- **Gauge scale:** min/max dBm and optional segment breakpoints for the bar gauges (same scale as charts use for Y-axis alignment).
+- **Band → external attenuation (dB):** per E-UTRA band map stored as `band_attenuation_db`; overrides built-in EC25 defaults for listed bands.
+- **MNO Common preset:** per-channel band, EARFCN, bandwidth, MNO—stored as `mno_common_preset`; when present, overrides the MNO Common block from `flows.json` for startup and **Pre-load MNO Common**.
+
+Use **Save** to write `dashboard_config.json`. **Pre-load MNO Common** on the dashboard applies the saved (or flows-derived) preset without restarting.
+
+**UX notes:** Turning a **channel off** clears that channel’s gauges and charts until it is enabled again. **Composite** power combines linear power from **enabled** channels only.
 
 ## Run the dashboard
 
@@ -109,6 +127,7 @@ uvicorn app.main:app --reload
 |------|------|
 | `dashboard/app/` | FastAPI app, templates, static assets, serial worker |
 | `flows.json` | Widget / flow metadata consumed by the dashboard |
+| `dashboard/dashboard_config.json` | Local UI/settings persistence (gitignored) |
 
 ## Quectel documentation (references)
 
@@ -126,5 +145,4 @@ Always treat the **revision dated for your module firmware** as authoritative if
 
 ## TODO
 
-- Add a **smoothing** control in the Settings tab (e.g. adjustable filtering for RSSI/gauges/charts so the UI can trade responsiveness vs. stability).
-- Explore hosting the dashboard/service on a **Teltonika RUT951** and connecting a **separate EC25** dedicated to factory-test/F TM measurements (to avoid interfering with the router’s primary cellular modem behavior).
+- Explore hosting the dashboard/service on a **Teltonika RUT951** and connecting a **separate EC25** dedicated to factory-test/FTM measurements (to avoid interfering with the router’s primary cellular modem behavior).

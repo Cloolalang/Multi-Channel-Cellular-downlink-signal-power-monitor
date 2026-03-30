@@ -40,6 +40,10 @@ def channel_prefixes() -> list[str]:
 
 VALID_CHANNEL_PREFIXES = frozenset(channel_prefixes())
 
+# Defaults for settings UI / stored preset when flows have no MNO Common block.
+MNO_DROPDOWN_LABELS: tuple[str, ...] = ("Vodafone", "VMO2", "EE", "H3G")
+BW_MHZ_OPTIONS: tuple[int, ...] = (5, 10, 15, 20)
+
 
 @dataclass(frozen=True)
 class MnoCommonPreset:
@@ -135,6 +139,91 @@ def parse_mno_common_preset(flows_path: Path) -> MnoCommonPreset | None:
         bw_mhz=tuple(ch_bw),
         mno=tuple(ch_mno),
     )
+
+
+def _normalize_mno_cell(val: Any) -> str | None:
+    if val is None:
+        return None
+    s = str(val).strip()
+    return s if s else None
+
+
+def _normalize_int_cell(val: Any) -> int | None:
+    if val is None or val == "":
+        return None
+    try:
+        return int(val)
+    except (TypeError, ValueError):
+        try:
+            return int(float(str(val).strip()))
+        except (TypeError, ValueError):
+            return None
+
+
+def _list_column(raw: dict[str, Any], key: str) -> list[Any]:
+    v = raw.get(key)
+    if not isinstance(v, list):
+        return []
+    return v
+
+
+def mno_preset_from_stored_dict(raw: dict[str, Any] | None) -> MnoCommonPreset | None:
+    """Build preset from dashboard_config.json `mno_common_preset` object."""
+    if raw is None or not isinstance(raw, dict):
+        return None
+    ear_l = _list_column(raw, "earfcn")
+    band_l = _list_column(raw, "band_eutra")
+    bw_l = _list_column(raw, "bw_mhz")
+    mno_l = _list_column(raw, "mno")
+    ch_earfcn: list[int | None] = []
+    ch_band: list[int | None] = []
+    ch_bw: list[int | None] = []
+    ch_mno: list[str | None] = []
+    for i in range(CHANNEL_COUNT):
+        ch_earfcn.append(_normalize_int_cell(ear_l[i]) if i < len(ear_l) else None)
+        ch_band.append(_normalize_int_cell(band_l[i]) if i < len(band_l) else None)
+        ch_bw.append(_normalize_int_cell(bw_l[i]) if i < len(bw_l) else None)
+        ch_mno.append(_normalize_mno_cell(mno_l[i]) if i < len(mno_l) else None)
+    return MnoCommonPreset(
+        earfcn=tuple(ch_earfcn),
+        band_eutra=tuple(ch_band),
+        bw_mhz=tuple(ch_bw),
+        mno=tuple(ch_mno),
+    )
+
+
+def mno_preset_to_form_dict(preset: MnoCommonPreset) -> dict[str, Any]:
+    """API/settings form shape: parallel arrays per channel index."""
+    return {
+        "band_eutra": [preset.band_eutra[i] for i in range(CHANNEL_COUNT)],
+        "earfcn": [preset.earfcn[i] for i in range(CHANNEL_COUNT)],
+        "bw_mhz": [preset.bw_mhz[i] for i in range(CHANNEL_COUNT)],
+        "mno": [preset.mno[i] for i in range(CHANNEL_COUNT)],
+    }
+
+
+def default_mno_form_dict() -> dict[str, Any]:
+    """Fallback when no flows preset and nothing stored yet."""
+    return {
+        "band_eutra": [20] * CHANNEL_COUNT,
+        "earfcn": [6400] * CHANNEL_COUNT,
+        "bw_mhz": [10] * CHANNEL_COUNT,
+        "mno": ["EE"] * CHANNEL_COUNT,
+    }
+
+
+def resolved_mno_common_form_dict(
+    stored: dict[str, Any] | None,
+    flows_path: Path,
+) -> dict[str, Any]:
+    """Form/API payload: saved dashboard preset wins; else flows.json MNO Common; else defaults."""
+    if stored is not None:
+        return stored
+    if flows_path.is_file():
+        fp = parse_mno_common_preset(flows_path)
+        if fp is not None:
+            return mno_preset_to_form_dict(fp)
+    return default_mno_form_dict()
 
 
 def load_phase1_widgets(flows_path: Path) -> list[dict[str, Any]]:

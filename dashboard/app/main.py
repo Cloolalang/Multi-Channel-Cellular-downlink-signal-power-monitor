@@ -14,20 +14,28 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
 from app.flows_inventory import (
+    BW_MHZ_OPTIONS,
     CHANNEL_COUNT,
+    MNO_DROPDOWN_LABELS,
     MnoCommonPreset,
     VALID_CHANNEL_PREFIXES,
     channel_prefixes,
     load_composite_widgets,
     load_controls_widgets,
     load_phase1_widgets,
+    mno_preset_from_stored_dict,
     parse_mno_common_preset,
+    resolved_mno_common_form_dict,
     widgets_by_channels,
 )
+from app import ec25_calibration
 from app.dashboard_config import (
     apply_dashboard_config_file,
+    clamp_smooth_samples,
     config_path,
+    get_mno_common_preset_stored_dict,
     save_dashboard_config_file,
+    set_mno_common_preset_stored_dict,
 )
 from app.runtime_state import AppRuntime
 from app.serial_worker import SerialWorker
@@ -76,6 +84,16 @@ class DashboardConfigBody(BaseModel):
     scan_channel_delay_sec: float = 1.0
     scan_round_delay_sec: float = 0.0
     ws_push_hz: float = 4.0
+    rssi_smooth_samples: int = 5
+    composite_smooth_samples: int = 10
+    # Parallel arrays: band_eutra, earfcn, bw_mhz, mno — length CHANNEL_COUNT; null/omit field = unchanged on apply.
+    mno_common_preset: dict[str, Any] | None = None
+    # E-UTRA band → external attenuation dB (positive); replaces built-in EC25 table for listed bands.
+    band_attenuation_db: dict[str, Any] | None = None
+    gauge_min: float | None = None
+    gauge_max: float | None = None
+    gauge_seg1: float | None = None
+    gauge_seg2: float | None = None
 
 
 def _connection_public() -> dict[str, Any]:
@@ -100,13 +118,24 @@ def _snapshot() -> dict[str, Any]:
     return snap
 
 
-def _apply_dashboard_settings(body: DashboardConfigBody) -> None:
+def _apply_dashboard_settings(body: DashboardConfigBody, rt: AppRuntime) -> None:
+    patches = body.model_dump(exclude_unset=True)
     settings.serial_port = body.serial_port.strip() or settings.serial_port
     settings.baudrate = max(300, int(body.baudrate))
     settings.mock_modem = bool(body.mock_modem)
     settings.scan_channel_delay_sec = max(0.0, float(body.scan_channel_delay_sec))
     settings.scan_round_delay_sec = max(0.0, float(body.scan_round_delay_sec))
     settings.ws_push_hz = max(0.1, float(body.ws_push_hz))
+    settings.rssi_smooth_samples = int(body.rssi_smooth_samples)
+    settings.composite_smooth_samples = int(body.composite_smooth_samples)
+    clamp_smooth_samples(settings)
+    if "mno_common_preset" in patches and body.mno_common_preset is not None:
+        set_mno_common_preset_stored_dict(body.mno_common_preset)
+    if "band_attenuation_db" in patches and body.band_attenuation_db is not None:
+        ec25_calibration.configure_band_attenuation(body.band_attenuation_db)
+    for k in ("gauge_min", "gauge_max", "gauge_seg1", "gauge_seg2"):
+        if k in patches:
+            setattr(rt, k, getattr(body, k))
 
 
 async def _reconnect_serial() -> None:
@@ -267,26 +296,35 @@ async def _tick_loop() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global serial_worker, _reader_task, _widgets_channels, _widgets_composite, _widgets_controls, _mno_common_preset
-    apply_dashboard_config_file(settings)
+    apply_dashboard_config_file(settings, runtime)
     runtime.started_at = time.time()
     if settings.flows_json.is_file():
         all_w = load_phase1_widgets(settings.flows_json)
         _widgets_channels = widgets_by_channels(all_w)
         _widgets_composite = load_composite_widgets(settings.flows_json)
         _widgets_controls = load_controls_widgets(settings.flows_json)
-        _mno_common_preset = parse_mno_common_preset(settings.flows_json)
+        flows_mno = parse_mno_common_preset(settings.flows_json)
     else:
         _widgets_channels = [[] for _ in range(CHANNEL_COUNT)]
         _widgets_composite = []
         _widgets_controls = []
-        _mno_common_preset = None
+        flows_mno = None
+
+    stored_mno = get_mno_common_preset_stored_dict()
+    if stored_mno is not None:
+        _mno_common_preset = mno_preset_from_stored_dict(stored_mno)
+    else:
+        _mno_common_preset = flows_mno
 
     async with runtime.lock:
         for p in channel_prefixes():
             runtime.channels[p].channel_enabled = True
         if _mno_common_preset is not None:
             runtime.apply_mno_common_preset(_mno_common_preset)
-            runtime.at_log.append("[mc-dspm] MNO Common preset applied from flows.json (startup).")
+            if stored_mno is not None:
+                runtime.at_log.append("[mc-dspm] MNO Common preset applied from dashboard config (startup).")
+            else:
+                runtime.at_log.append("[mc-dspm] MNO Common preset applied from flows.json (startup).")
         else:
             for p in channel_prefixes():
                 runtime.channels[p].sync_atten_from_band_ec25()
@@ -324,7 +362,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Multi-Channel Cellular Downlink Signal Power Monitor",
+    title="Multi-Channel LTE (4G) Downlink Signal Power Monitor",
     version="1.0-beta",
     lifespan=lifespan,
 )
@@ -344,6 +382,10 @@ async def index(request: Request) -> HTMLResponse:
         }
         for i in range(CHANNEL_COUNT)
     ]
+    mno_form = resolved_mno_common_form_dict(
+        get_mno_common_preset_stored_dict(),
+        settings.flows_json,
+    )
     return templates.TemplateResponse(
         request,
         "index.html",
@@ -355,6 +397,11 @@ async def index(request: Request) -> HTMLResponse:
             "snap_json": json.dumps(snap),
             "settings": settings,
             "channel_prefixes": channel_prefixes(),
+            "channel_indices": list(range(CHANNEL_COUNT)),
+            "mno_common_form": mno_form,
+            "mno_options": MNO_DROPDOWN_LABELS,
+            "bw_mhz_options": BW_MHZ_OPTIONS,
+            "band_atten_rows": ec25_calibration.band_atten_rows_for_ui(),
             "dashboard_config_path": str(config_path()),
         },
     )
@@ -362,6 +409,13 @@ async def index(request: Request) -> HTMLResponse:
 
 @app.get("/api/config/dashboard")
 async def get_dashboard_config() -> dict[str, Any]:
+    async with runtime.lock:
+        gm, gx, g1, g2 = (
+            runtime.gauge_min,
+            runtime.gauge_max,
+            runtime.gauge_seg1,
+            runtime.gauge_seg2,
+        )
     return {
         "ok": True,
         "serial_port": settings.serial_port,
@@ -370,15 +424,33 @@ async def get_dashboard_config() -> dict[str, Any]:
         "scan_channel_delay_sec": settings.scan_channel_delay_sec,
         "scan_round_delay_sec": settings.scan_round_delay_sec,
         "ws_push_hz": settings.ws_push_hz,
+        "rssi_smooth_samples": settings.rssi_smooth_samples,
+        "composite_smooth_samples": settings.composite_smooth_samples,
+        "mno_common_preset": resolved_mno_common_form_dict(
+            get_mno_common_preset_stored_dict(),
+            settings.flows_json,
+        ),
+        "band_attenuation_db": ec25_calibration.band_atten_dict_for_api(),
+        "gauge_min": gm,
+        "gauge_max": gx,
+        "gauge_seg1": g1,
+        "gauge_seg2": g2,
         "config_path": str(config_path()),
     }
 
 
 @app.post("/api/config/dashboard")
 async def post_dashboard_config(body: DashboardConfigBody) -> dict[str, Any]:
+    global _mno_common_preset
     prev = (settings.serial_port, settings.baudrate, settings.mock_modem)
-    _apply_dashboard_settings(body)
-    save_dashboard_config_file(settings)
+    body_patch = body.model_dump(exclude_unset=True)
+    async with runtime.lock:
+        _apply_dashboard_settings(body, runtime)
+        if "mno_common_preset" in body_patch and body.mno_common_preset is not None:
+            _mno_common_preset = mno_preset_from_stored_dict(body.mno_common_preset)
+        for p in channel_prefixes():
+            runtime.channels[p].sync_atten_from_band_ec25()
+    save_dashboard_config_file(settings, runtime)
     conn_changed = prev != (settings.serial_port, settings.baudrate, settings.mock_modem)
     if conn_changed:
         await _reconnect_serial()
@@ -390,6 +462,8 @@ def _patch_channel(prefix: str, p: ChannelPatch) -> None:
     ch = runtime.channels[prefix]
     if p.channel_enabled is not None:
         ch.channel_enabled = p.channel_enabled
+        if not ch.channel_enabled:
+            ch.clear_measurement_ui_state()
     if p.band_eutra is not None:
         ch.band_eutra = int(p.band_eutra)
         ch.sync_atten_from_band_ec25()
@@ -416,6 +490,7 @@ async def patch_gauge_ranges(body: GaugeRangePatch) -> dict[str, Any]:
         if "gauge_seg2" in data:
             runtime.gauge_seg2 = data["gauge_seg2"]
         snap = _snapshot()
+    save_dashboard_config_file(settings, runtime)
     await _broadcast()
     return {"ok": True, **snap}
 
@@ -450,6 +525,9 @@ async def all_channels(body: AllChannelsBody) -> dict[str, Any]:
     async with runtime.lock:
         for p in channel_prefixes():
             runtime.channels[p].channel_enabled = body.channel_enabled
+        if not body.channel_enabled:
+            for p in channel_prefixes():
+                runtime.channels[p].clear_measurement_ui_state()
         snap = _snapshot()
     await _broadcast()
     return {"ok": True, **snap}
@@ -476,7 +554,10 @@ async def zero_gauges() -> dict[str, Any]:
 @app.post("/api/runtime/preload-mno-common")
 async def preload_mno_common() -> dict[str, Any]:
     if _mno_common_preset is None:
-        return {"ok": False, "error": "MNO Common preset not available (check flows.json)"}
+        return {
+            "ok": False,
+            "error": "MNO Common preset not configured (save a table in Settings or add flows.json).",
+        }
     async with runtime.lock:
         runtime.apply_mno_common_preset(_mno_common_preset)
         snap = _snapshot()

@@ -3,6 +3,7 @@
 {% set _lbl = (w.label or "")|lower %}
 {% if w.type == "ui_button" and 'all' in _lbl and 'channel' in _lbl and 'off' in _lbl %}
 {% elif w.type == "ui_button" and 'pre-load' in _lbl and '6300' in (w.label or '') %}
+{% elif w.type == "ui_button" and 'pre-load' in _lbl and 'zero' in _lbl and 'mno' not in _lbl %}
 {% else %}
 {% set c = snap.controls %}
 <div class="nr-widget nr-control" data-widget-id="{{ w.id }}" data-type="{{ w.type }}">
@@ -46,30 +47,7 @@
     </div>
     {% endif %}
   {% elif w.type == "ui_text_input" %}
-    {% if w.label == "Gauge Min" %}
-    <label class="field">
-      <span class="label">{{ w.label }}</span>
-      <input type="number" step="any" class="js-gauge-ctrl" data-field="gauge_min" placeholder="-30"
-        value="{% if c.gauge_min is not none %}{{ c.gauge_min }}{% endif %}"/>
-    </label>
-    {% elif w.label == "Gauge Max" %}
-    <label class="field">
-      <span class="label">{{ w.label }}</span>
-      <input type="number" step="any" class="js-gauge-ctrl" data-field="gauge_max" placeholder="25"
-        value="{% if c.gauge_max is not none %}{{ c.gauge_max }}{% endif %}"/>
-    </label>
-    {% elif w.label == "Gauge seg1" or w.label == "Gauge seg 1" %}
-    <label class="field">
-      <span class="label">{{ w.label }}</span>
-      <input type="number" step="any" class="js-gauge-ctrl" data-field="gauge_seg1" placeholder="optional"
-        value="{% if c.gauge_seg1 is not none %}{{ c.gauge_seg1 }}{% endif %}"/>
-    </label>
-    {% elif w.label == "Gauge seg 2" or w.label == "Gauge seg2" %}
-    <label class="field">
-      <span class="label">{{ w.label }}</span>
-      <input type="number" step="any" class="js-gauge-ctrl" data-field="gauge_seg2" placeholder="optional"
-        value="{% if c.gauge_seg2 is not none %}{{ c.gauge_seg2 }}{% endif %}"/>
-    </label>
+    {% if w.label == "Gauge Min" or w.label == "Gauge Max" or w.label == "Gauge seg1" or w.label == "Gauge seg2" or w.label == "Gauge seg 1" or w.label == "Gauge seg 2" %}
     {% else %}
     <label class="field control-disabled">
       <span class="label">{{ w.label }}</span>
@@ -173,7 +151,7 @@
 <section class="control-strip">
   <article class="panel control-panel">
     <h2>Controls</h2>
-    <p class="control-hint">Master switch and shortcuts match the Sector 1 <em>Controls</em> group from flows. Default <code>PT_SERIAL_PORT=COM40</code>, <code>PT_MOCK_MODEM=false</code>: real modem RX parses <code>+QRXFTM</code> (2nd value = RSSI dBm). Use <code>PT_MOCK_MODEM=true</code> for development without hardware. <code>AT+QRFTESTMODE</code> runs once at startup, then one <code>AT+QRXFTM</code> per enabled channel per pass, round-robin. <code>PT_MODEM_QRXFTM_SCAN=false</code> stops auto scans. <code>PT_SCAN_CHANNEL_DELAY_SEC</code> (default 1s) spaces each channel so the modem can answer before the next TX. <code>PT_SCAN_ROUND_DELAY_SEC</code> pauses after each full pass.</p>
+    <p class="control-hint">This build targets <strong>LTE (4G)</strong> (E-UTRA / downlink FTM). Master switch and shortcuts match the Sector 1 <em>Controls</em> group from flows. Gauge min/max and segment limits are on the <strong>Settings</strong> tab. Default <code>PT_SERIAL_PORT=COM40</code>, <code>PT_MOCK_MODEM=false</code>: real modem RX parses <code>+QRXFTM</code> (2nd value = RSSI dBm). Use <code>PT_MOCK_MODEM=true</code> for development without hardware. <code>AT+QRFTESTMODE</code> runs once at startup, then one <code>AT+QRXFTM</code> per enabled channel per pass, round-robin. <code>PT_MODEM_QRXFTM_SCAN=false</code> stops auto scans. <code>PT_SCAN_CHANNEL_DELAY_SEC</code> (default 1s) spaces each channel so the modem can answer before the next TX. <code>PT_SCAN_ROUND_DELAY_SEC</code> pauses after each full pass.</p>
     <div class="control-actions">
       {% if controls_widgets|length > 0 %}
         {% for w in controls_widgets %}
@@ -196,18 +174,6 @@
           <span class="label">Scan Count (Since Deploy)</span>
           <span class="value js-ctrl-scan-count">{{ snap.controls.scan_count }}</span>
         </div>
-        <label class="field"><span class="label">Gauge Min</span>
-          <input type="number" step="any" class="js-gauge-ctrl" data-field="gauge_min" placeholder="-30"
-            value="{% if snap.controls.gauge_min is not none %}{{ snap.controls.gauge_min }}{% endif %}"/></label>
-        <label class="field"><span class="label">Gauge Max</span>
-          <input type="number" step="any" class="js-gauge-ctrl" data-field="gauge_max" placeholder="25"
-            value="{% if snap.controls.gauge_max is not none %}{{ snap.controls.gauge_max }}{% endif %}"/></label>
-        <label class="field"><span class="label">Gauge seg1</span>
-          <input type="number" step="any" class="js-gauge-ctrl" data-field="gauge_seg1" placeholder="optional"
-            value="{% if snap.controls.gauge_seg1 is not none %}{{ snap.controls.gauge_seg1 }}{% endif %}"/></label>
-        <label class="field"><span class="label">Gauge seg2</span>
-          <input type="number" step="any" class="js-gauge-ctrl" data-field="gauge_seg2" placeholder="optional"
-            value="{% if snap.controls.gauge_seg2 is not none %}{{ snap.controls.gauge_seg2 }}{% endif %}"/></label>
         <button type="button" class="btn-control" data-control-action="clear-charts">Clear charts</button>
         <button type="button" class="btn-control" data-control-action="zero-gauges">Zero gauges</button>
         <button type="button" class="btn-control" data-control-action="preload-mno-common">Pre-load MNO Common</button>
@@ -251,7 +217,7 @@
 <section class="settings-wrap">
   <article class="panel settings-panel">
     <h2>Connection &amp; timing</h2>
-    <p class="control-hint">Values are saved to <code>{{ dashboard_config_path }}</code>. Changing the serial port, baud rate, or mock mode reopens the port immediately. Timing values apply on the next scan or WebSocket tick.</p>
+    <p class="control-hint">Everything below is saved to <code>{{ dashboard_config_path }}</code> and reloaded on the next app start. Changing the serial port, baud rate, or mock mode reopens the port immediately. Environment overrides still work for connection via <code>PT_*</code> before the file is merged at startup.</p>
     <form id="form-dashboard-config" class="settings-form">
       <fieldset class="settings-fieldset">
         <legend>Serial</legend>
@@ -287,6 +253,102 @@
           <input type="number" name="ws_push_hz" min="0.1" step="0.5"
             value="{{ settings.ws_push_hz }}"/>
         </label>
+      </fieldset>
+      <fieldset class="settings-fieldset">
+        <legend>Smoothing</legend>
+        <label class="field">
+          <span class="label">Per-channel RSSI window (samples)</span>
+          <input type="number" name="rssi_smooth_samples" min="1" max="64" step="1"
+            value="{{ settings.rssi_smooth_samples }}"
+            title="Rolling mean / SD for RSSI avg and SD gauges and per-channel charts (max 64, matches history length)."/>
+        </label>
+        <label class="field">
+          <span class="label">Composite power window (samples)</span>
+          <input type="number" name="composite_smooth_samples" min="1" max="512" step="1"
+            value="{{ settings.composite_smooth_samples }}"
+            title="Rolling mean / SD over composite dBm for composite gauges and charts."/>
+        </label>
+      </fieldset>
+      <fieldset class="settings-fieldset">
+        <legend>Gauge scale (dashboard)</legend>
+        <p class="control-hint">Bar-gauge scale for the dashboard (min/max and optional segment split). Saved with <strong>Save</strong> and restored on restart.</p>
+        <div class="settings-gauge-grid">
+          <label class="field"><span class="label">Gauge min (dBm)</span>
+            <input type="number" name="cfg_gauge_min" step="any"
+              value="{% if snap.controls.gauge_min is not none %}{{ snap.controls.gauge_min }}{% endif %}"/></label>
+          <label class="field"><span class="label">Gauge max (dBm)</span>
+            <input type="number" name="cfg_gauge_max" step="any"
+              value="{% if snap.controls.gauge_max is not none %}{{ snap.controls.gauge_max }}{% endif %}"/></label>
+          <label class="field"><span class="label">Gauge seg1 (optional)</span>
+            <input type="number" name="cfg_gauge_seg1" step="any"
+              value="{% if snap.controls.gauge_seg1 is not none %}{{ snap.controls.gauge_seg1 }}{% endif %}"/></label>
+          <label class="field"><span class="label">Gauge seg2 (optional)</span>
+            <input type="number" name="cfg_gauge_seg2" step="any"
+              value="{% if snap.controls.gauge_seg2 is not none %}{{ snap.controls.gauge_seg2 }}{% endif %}"/></label>
+        </div>
+      </fieldset>
+      <fieldset class="settings-fieldset">
+        <legend>Band → external attenuation (dB)</legend>
+        <p class="control-hint">Per E-UTRA band calibration: <strong>displayed RSSI = raw +QRXFTM + atten_db</strong>. Rows here override built-in EC25 defaults for that band; add any band you use. Removing a row falls back to the built-in value (or 0 if unknown). Saved in <code>band_attenuation_db</code>.</p>
+        <div class="settings-band-atten-wrap">
+          <table class="settings-band-atten-table">
+            <thead>
+              <tr><th>Band</th><th>Atten (dB)</th><th></th></tr>
+            </thead>
+            <tbody id="js-band-atten-tbody">
+              {% for row in band_atten_rows %}
+              <tr class="js-band-atten-row">
+                <td><input type="number" class="js-band-atten-band" step="1" value="{{ row.band }}"/></td>
+                <td><input type="number" class="js-band-atten-db" step="any" value="{{ row.atten_db }}"/></td>
+                <td><button type="button" class="btn-control btn-band-atten-del" title="Remove row">×</button></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <button type="button" class="btn-control" id="js-band-atten-add">Add band</button>
+        </div>
+      </fieldset>
+      <fieldset class="settings-fieldset settings-fieldset--mno">
+        <legend>MNO Common preset</legend>
+        <p class="control-hint">Values applied when you use <strong>Pre-load MNO Common</strong> on the dashboard, and at startup once saved here. Stored in config as <code>mno_common_preset</code>; when present it overrides the MNO Common block from <code>flows.json</code>. Leave a cell blank to leave that field unchanged when pre-loading.</p>
+        <div class="settings-mno-table-wrap">
+          <table class="settings-mno-table">
+            <thead>
+              <tr><th>Ch</th><th>Band</th><th>DL EARFCN</th><th>BW</th><th>MNO</th></tr>
+            </thead>
+            <tbody>
+              {% for i in channel_indices %}
+              <tr>
+                <td class="settings-mno-ch">{{ i }}</td>
+                <td>
+                  <input type="number" class="js-mno-preset" data-field="band_eutra" data-ch="{{ i }}" step="1"
+                    value="{% if mno_common_form.band_eutra[i] is not none %}{{ mno_common_form.band_eutra[i] }}{% endif %}"/>
+                </td>
+                <td>
+                  <input type="number" class="js-mno-preset" data-field="earfcn" data-ch="{{ i }}" step="1"
+                    value="{% if mno_common_form.earfcn[i] is not none %}{{ mno_common_form.earfcn[i] }}{% endif %}"/>
+                </td>
+                <td>
+                  <select class="js-mno-preset" data-field="bw_mhz" data-ch="{{ i }}">
+                    <option value="">— leave</option>
+                    {% for bw in bw_mhz_options %}
+                    <option value="{{ bw }}" {% if mno_common_form.bw_mhz[i] is not none and mno_common_form.bw_mhz[i] == bw %}selected{% endif %}>{{ bw }} MHz</option>
+                    {% endfor %}
+                  </select>
+                </td>
+                <td>
+                  <select class="js-mno-preset" data-field="mno" data-ch="{{ i }}">
+                    <option value="">— leave</option>
+                    {% for op in mno_options %}
+                    <option value="{{ op }}" {% if mno_common_form.mno[i] == op %}selected{% endif %}>{{ op }}</option>
+                    {% endfor %}
+                  </select>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </fieldset>
       <div class="settings-actions">
         <button type="submit" class="btn-control btn-settings-save">Save</button>
