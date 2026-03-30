@@ -2,7 +2,6 @@
 
 **Version:** 1.0 beta  
 
-**GitHub:** [Cloolalang/Multi-Channel-Cellular-downlink-signal-power-monitor](https://github.com/Cloolalang/Multi-Channel-Cellular-downlink-signal-power-monitor)
 
 This repository is the **Multi-Channel Cellular Downlink Signal Power Monitor**: a small stack for RF / modem bench work. The active web app is a **FastAPI** dashboard under `dashboard/` that talks to a Quectel modem over serial (or a mock for UI development), syncs layout from `flows.json`, and pushes live state over WebSockets.
 
@@ -126,3 +125,4 @@ Always treat the **revision dated for your module firmware** as authoritative if
 ## TODO
 
 - Add a **smoothing** control in the Settings tab (e.g. adjustable filtering for RSSI/gauges/charts so the UI can trade responsiveness vs. stability).
+- Explore hosting the dashboard/service on a **Teltonika RUT951** and connecting a **separate EC25** dedicated to factory-test/F TM measurements (to avoid interfering with the router’s primary cellular modem behavior).
