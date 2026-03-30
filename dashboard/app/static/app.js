@@ -108,36 +108,38 @@
     return CHANNEL_KEYS.length;
   }
 
-  function applyMnoPresetToForm(p) {
+  function applyMnoPresetToForm(p, rootEl) {
     if (!p || !Array.isArray(window.__CHANNELS)) return;
+    const root = rootEl && rootEl.querySelector ? rootEl : document;
     const n = channelCount();
     const band = p.band_eutra || [];
     const ear = p.earfcn || [];
     const bw = p.bw_mhz || [];
     const mno = p.mno || [];
     for (let i = 0; i < n; i++) {
-      const b = document.querySelector(`.js-mno-preset[data-field="band_eutra"][data-ch="${i}"]`);
+      const b = root.querySelector(`.js-mno-preset[data-field="band_eutra"][data-ch="${i}"]`);
       if (b) b.value = band[i] == null || band[i] === "" ? "" : String(band[i]);
-      const e = document.querySelector(`.js-mno-preset[data-field="earfcn"][data-ch="${i}"]`);
+      const e = root.querySelector(`.js-mno-preset[data-field="earfcn"][data-ch="${i}"]`);
       if (e) e.value = ear[i] == null || ear[i] === "" ? "" : String(ear[i]);
-      const bwEl = document.querySelector(`.js-mno-preset[data-field="bw_mhz"][data-ch="${i}"]`);
+      const bwEl = root.querySelector(`.js-mno-preset[data-field="bw_mhz"][data-ch="${i}"]`);
       if (bwEl) bwEl.value = bw[i] == null || bw[i] === "" ? "" : String(bw[i]);
-      const m = document.querySelector(`.js-mno-preset[data-field="mno"][data-ch="${i}"]`);
+      const m = root.querySelector(`.js-mno-preset[data-field="mno"][data-ch="${i}"]`);
       if (m) m.value = mno[i] == null || mno[i] === "" ? "" : String(mno[i]);
     }
   }
 
-  function collectMnoCommonPreset() {
+  function collectMnoCommonPreset(formEl) {
+    const root = formEl && formEl.querySelector ? formEl : document.getElementById("form-dashboard-config") || document;
     const n = channelCount();
     const band_eutra = [];
     const earfcn = [];
     const bw_mhz = [];
     const mno = [];
     for (let i = 0; i < n; i++) {
-      const bel = document.querySelector(`.js-mno-preset[data-field="band_eutra"][data-ch="${i}"]`);
-      const earEl = document.querySelector(`.js-mno-preset[data-field="earfcn"][data-ch="${i}"]`);
-      const bwEl = document.querySelector(`.js-mno-preset[data-field="bw_mhz"][data-ch="${i}"]`);
-      const mnoEl = document.querySelector(`.js-mno-preset[data-field="mno"][data-ch="${i}"]`);
+      const bel = root.querySelector(`.js-mno-preset[data-field="band_eutra"][data-ch="${i}"]`);
+      const earEl = root.querySelector(`.js-mno-preset[data-field="earfcn"][data-ch="${i}"]`);
+      const bwEl = root.querySelector(`.js-mno-preset[data-field="bw_mhz"][data-ch="${i}"]`);
+      const mnoEl = root.querySelector(`.js-mno-preset[data-field="mno"][data-ch="${i}"]`);
       const parseIntOrNull = (el) => {
         if (!el) return null;
         const s = String(el.value).trim();
@@ -321,6 +323,12 @@
       if (mockEl) {
         mockEl.textContent = snap.connection.mock_modem ? "MOCK modem" : "HW modem";
       }
+    }
+    if (snap.modem) {
+      const hwEl = document.getElementById("hdr-modem-hw");
+      const fwEl = document.getElementById("hdr-modem-fw");
+      if (hwEl) hwEl.textContent = snap.modem.hw || "—";
+      if (fwEl) fwEl.textContent = snap.modem.fw || "—";
     }
     if (snap.controls) window.__lastControls = snap.controls;
     if (snap.controls) {
@@ -586,7 +594,7 @@
               if (wh) wh.value = j.ws_push_hz ?? 4;
               if (rss) rss.value = j.rssi_smooth_samples ?? 5;
               if (css) css.value = j.composite_smooth_samples ?? 10;
-              if (j.mno_common_preset) applyMnoPresetToForm(j.mno_common_preset);
+              if (j.mno_common_preset) applyMnoPresetToForm(j.mno_common_preset, f);
               const gmn = f.querySelector('[name="cfg_gauge_min"]');
               const gmx = f.querySelector('[name="cfg_gauge_max"]');
               const setG = (el, val) => {
@@ -623,7 +631,7 @@
           String(fd.get("composite_smooth_samples") || "10"),
           10
         ),
-        mno_common_preset: collectMnoCommonPreset(),
+        mno_common_preset: collectMnoCommonPreset(form),
         band_attenuation_db: collectBandAttenTable(),
         gauge_min: parseCfgNullableFloat(fd.get("cfg_gauge_min")),
         gauge_max: parseCfgNullableFloat(fd.get("cfg_gauge_max")),

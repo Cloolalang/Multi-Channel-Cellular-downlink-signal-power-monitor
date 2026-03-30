@@ -19,6 +19,8 @@ There is also **Node-RED** related material (`flows.json`, `package.json`, `node
 
 This project has been tested on a **Quectel EC25** modem on **Windows**, using **Waveshare** USB drivers for the USB–serial link. Other Quectel modules and host OSes may work if the serial port enumerates correctly and AT commands behave as expected.
 
+- **[Waveshare EG25-G mPCIe wiki](https://www.waveshare.com/wiki/EG25-G_mPCIe)** — board/module page and driver notes.
+
 The modem is operated in **factory RF test mode** (Quectel test commands such as `AT+QRFTESTMODE` / `AT+QRXFTM`) **without a SIM card**—downlink power is measured via the test/measurement path, not via normal network registration.
 
 ### RF path and power levels (DAS / repeater)
@@ -136,6 +138,7 @@ uvicorn app.main:app --reload
 Serial commands used here (`AT+QRFTESTMODE`, `AT+QRXFTM`, and related FTM behaviour) are defined in Quectel’s factory-test documentation for **EC2x / EGxx**-class modules. A key reference is:
 
 - **Quectel_EC2x&EGxx_FTM_AT_Commands_Manual_V1.0_Preliminary_20190404.pdf** (filename may show a browser suffix such as `(3).pdf` if downloaded multiple times)—**FTM AT Commands Manual**, preliminary **2019-04-04**.
+- **[Quectel EC2x/EG9x/EG2x-G/EM05 AT Commands Manual V2.0 (Waveshare mirror PDF)](https://files.waveshare.com/wiki/EG25-G-mPCIe/Quectel-EC2x%26EG9x%26EG2x-G%26EM05-Series-AT-Commands-Manual-V2.0.pdf)** — general AT command reference for this module family.
 
 For the same command set and updated PDFs, use Quectel’s official sources (registration / login is often required):
 
@@ -148,3 +151,5 @@ Always treat the **revision dated for your module firmware** as authoritative if
 ## TODO
 
 - Explore hosting the dashboard/service on a **Teltonika RUT951** and connecting a **separate EC25** dedicated to factory-test/FTM measurements (to avoid interfering with the router’s primary cellular modem behavior).
+- Add **GSM** capability (in addition to LTE/4G-only scope).
+- Add **external calibration correction factors** for **channel bandwidth** (BW-dependent correction).

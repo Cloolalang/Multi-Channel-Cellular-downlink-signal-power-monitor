@@ -212,13 +212,24 @@ def default_mno_form_dict() -> dict[str, Any]:
     }
 
 
+def _normalize_mno_common_form_dict(d: dict[str, Any]) -> dict[str, Any]:
+    """Ensure parallel arrays exist with length CHANNEL_COUNT (null-padded) for templates and GET /api."""
+    out = dict(d)
+    for key in ("band_eutra", "earfcn", "bw_mhz", "mno"):
+        col = out.get(key)
+        if not isinstance(col, list):
+            col = []
+        out[key] = [col[i] if i < len(col) else None for i in range(CHANNEL_COUNT)]
+    return out
+
+
 def resolved_mno_common_form_dict(
     stored: dict[str, Any] | None,
     flows_path: Path,
 ) -> dict[str, Any]:
     """Form/API payload: saved dashboard preset wins; else flows.json MNO Common; else defaults."""
     if stored is not None:
-        return stored
+        return _normalize_mno_common_form_dict(stored)
     if flows_path.is_file():
         fp = parse_mno_common_preset(flows_path)
         if fp is not None:

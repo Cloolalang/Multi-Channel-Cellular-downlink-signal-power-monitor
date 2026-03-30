@@ -147,6 +147,9 @@ class AppRuntime:
     at_log: deque[str] = field(default_factory=lambda: deque(maxlen=200))
     serial_rx_log: deque[str] = field(default_factory=lambda: deque(maxlen=200))
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    modem_hw: str | None = None
+    modem_fw: str | None = None
+    modem_ident_at: float | None = None
     # One entry per AT+QRXFTM sent per channel step; +QRXFTM lines consume in order.
     qrxftm_expect: deque[str] = field(default_factory=lambda: deque(maxlen=256))
     # Composit Power (all CC): linear sum of mW from enabled carriers' RSSI (dBm).
@@ -366,5 +369,10 @@ class AppRuntime:
             "scan_count": self.scan_count,
             "modem_qrxftm_scan": settings.modem_qrxftm_scan,
             "scan_active_channel": scan_led_channel,
+        }
+        out["modem"] = {
+            "hw": self.modem_hw,
+            "fw": self.modem_fw,
+            "identified": self.modem_ident_at,
         }
         return out

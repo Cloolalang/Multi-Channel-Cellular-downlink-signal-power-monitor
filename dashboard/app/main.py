@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import copy
 import json
 import time
 from contextlib import asynccontextmanager
@@ -11,7 +12,7 @@ from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.flows_inventory import (
     BW_MHZ_OPTIONS,
@@ -78,6 +79,8 @@ class GaugeRangePatch(BaseModel):
 class DashboardConfigBody(BaseModel):
     """Saved to dashboard_config.json; connection fields trigger serial reopen."""
 
+    model_config = ConfigDict(extra="ignore")
+
     serial_port: str
     baudrate: int = 115200
     mock_modem: bool = False
@@ -127,8 +130,8 @@ def _apply_dashboard_settings(body: DashboardConfigBody, rt: AppRuntime) -> None
     settings.rssi_smooth_samples = int(body.rssi_smooth_samples)
     settings.composite_smooth_samples = int(body.composite_smooth_samples)
     clamp_smooth_samples(settings)
-    if "mno_common_preset" in patches and body.mno_common_preset is not None:
-        set_mno_common_preset_stored_dict(body.mno_common_preset)
+    if body.mno_common_preset is not None:
+        set_mno_common_preset_stored_dict(copy.deepcopy(body.mno_common_preset))
     if "band_attenuation_db" in patches and body.band_attenuation_db is not None:
         ec25_calibration.configure_band_attenuation(body.band_attenuation_db)
     for k in ("gauge_min", "gauge_max"):
@@ -165,6 +168,7 @@ async def _reconnect_serial() -> None:
             )
     if not settings.mock_modem and serial_worker.ser is not None:
         await _modem_qrftestmode_prep()
+        asyncio.create_task(_probe_modem_identity())
         _reader_task = asyncio.create_task(serial_worker.reader_loop())
 
 
@@ -198,6 +202,95 @@ async def _modem_qrftestmode_prep() -> None:
     async with runtime.lock:
         runtime.at_log.append(f"> TX [modem-prep] {cmd1}")
     sw.enqueue(cmd1)
+
+
+def _clean_modem_id_lines(lines: list[str]) -> list[str]:
+    out: list[str] = []
+    for raw in lines:
+        s = (raw or "").strip()
+        if not s:
+            continue
+        up = s.upper()
+        if up in ("OK", "ERROR"):
+            continue
+        if up.startswith("+CME ERROR") or up.startswith("+CMS ERROR"):
+            continue
+        out.append(s)
+    return out
+
+
+async def _await_new_rx_lines(start_len: int, timeout_sec: float) -> list[str]:
+    """Wait for serial_rx_log to grow; return new raw lines."""
+    deadline = time.time() + max(0.05, float(timeout_sec))
+    while time.time() < deadline:
+        async with runtime.lock:
+            cur = list(runtime.serial_rx_log)
+        if len(cur) > start_len:
+            return cur[start_len:]
+        await asyncio.sleep(0.05)
+    return []
+
+
+async def _run_at_collect_lines(cmd: str, timeout_sec: float = 1.5) -> list[str]:
+    """Send AT and collect subsequent RX lines until OK/ERROR/CME or timeout."""
+    sw = serial_worker
+    if settings.mock_modem or sw is None or sw.ser is None:
+        return []
+    async with runtime.lock:
+        start_len = len(runtime.serial_rx_log)
+        runtime.at_log.append(f"> TX [id] {cmd}")
+    sw.enqueue(cmd)
+    collected: list[str] = []
+    deadline = time.time() + max(0.2, float(timeout_sec))
+    while time.time() < deadline:
+        new_lines = await _await_new_rx_lines(start_len, timeout_sec=0.35)
+        if new_lines:
+            collected.extend(new_lines)
+            start_len += len(new_lines)
+            up = "\n".join(new_lines).upper()
+            if "\nOK" in ("\n" + up) or "\nERROR" in ("\n" + up) or "CME ERROR" in up:
+                break
+        else:
+            await asyncio.sleep(0.05)
+    return collected
+
+
+def _pick_hw_from_ati(lines: list[str]) -> str | None:
+    cleaned = _clean_modem_id_lines(lines)
+    if not cleaned:
+        return None
+    for s in cleaned:
+        up = s.upper()
+        if "EC25" in up or "QUECTEL" in up:
+            return s
+    return cleaned[0]
+
+
+def _pick_fw_from_cgmr(lines: list[str]) -> str | None:
+    cleaned = _clean_modem_id_lines(lines)
+    if not cleaned:
+        return None
+    return cleaned[0]
+
+
+async def _probe_modem_identity() -> None:
+    """Query modem HW/FW once and publish to runtime snapshot."""
+    if settings.mock_modem or serial_worker is None or serial_worker.ser is None:
+        async with runtime.lock:
+            runtime.modem_hw = "MOCK modem"
+            runtime.modem_fw = None
+            runtime.modem_ident_at = time.time()
+        return
+    ati_lines = await _run_at_collect_lines("ATI", timeout_sec=2.0)
+    cgmr_lines = await _run_at_collect_lines("AT+CGMR", timeout_sec=2.0)
+    hw = _pick_hw_from_ati(ati_lines)
+    fw = _pick_fw_from_cgmr(cgmr_lines)
+    async with runtime.lock:
+        runtime.modem_hw = hw
+        runtime.modem_fw = fw
+        runtime.modem_ident_at = time.time()
+        if hw or fw:
+            runtime.at_log.append(f"[mc-dspm] Modem identity: hw={hw or '—'}, fw={fw or '—'}.")
 
 
 async def _enqueue_qrxftm(channel: str, log_tag: str) -> tuple[bool, str | None]:
@@ -380,6 +473,7 @@ async def lifespan(app: FastAPI):
     asyncio.create_task(serial_worker.writer_loop())
     if not settings.mock_modem and serial_worker.ser is not None:
         _reader_task = asyncio.create_task(serial_worker.reader_loop())
+    asyncio.create_task(_probe_modem_identity())
     asyncio.create_task(_startup_rf())
     asyncio.create_task(_tick_loop())
     async with runtime.lock:
@@ -477,13 +571,22 @@ async def get_dashboard_config() -> dict[str, Any]:
 async def post_dashboard_config(body: DashboardConfigBody) -> dict[str, Any]:
     global _mno_common_preset
     prev = (settings.serial_port, settings.baudrate, settings.mock_modem)
-    body_patch = body.model_dump(exclude_unset=True)
     async with runtime.lock:
         _apply_dashboard_settings(body, runtime)
-        if "mno_common_preset" in body_patch and body.mno_common_preset is not None:
-            _mno_common_preset = mno_preset_from_stored_dict(body.mno_common_preset)
-        for p in channel_prefixes():
-            runtime.channels[p].sync_atten_from_band_ec25()
+        applied_mno_runtime = False
+        if body.mno_common_preset is not None:
+            _mno_common_preset = mno_preset_from_stored_dict(
+                copy.deepcopy(body.mno_common_preset)
+            )
+            if _mno_common_preset is not None:
+                runtime.apply_mno_common_preset(_mno_common_preset)
+                applied_mno_runtime = True
+                runtime.at_log.append(
+                    "[mc-dspm] MNO Common preset applied to runtime from Settings save."
+                )
+        if not applied_mno_runtime:
+            for p in channel_prefixes():
+                runtime.channels[p].sync_atten_from_band_ec25()
     save_dashboard_config_file(settings, runtime)
     conn_changed = prev != (settings.serial_port, settings.baudrate, settings.mock_modem)
     if conn_changed:
