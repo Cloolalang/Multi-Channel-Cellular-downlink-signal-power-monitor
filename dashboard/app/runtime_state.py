@@ -30,6 +30,20 @@ def _composite_smooth_window() -> int:
     return max(1, min(int(settings.composite_smooth_samples), 512))
 
 
+def _round_dbm_half(x: float) -> float:
+    """Quantise dBm (or other dB-domain display values) to 0.5 dB steps (…, 1, 1.5, 2, …)."""
+    if not math.isfinite(x):
+        return float(x)
+    sign = 1.0 if x >= 0.0 else -1.0
+    ax = abs(float(x))
+    q = sign * (math.floor(ax * 2.0 + 0.5) / 2.0)
+    return round(q, 1)
+
+
+def _round_dbm_series(pairs: list[tuple[float, float]]) -> list[tuple[float, float]]:
+    return [(t, _round_dbm_half(v)) for (t, v) in pairs]
+
+
 def format_uptime_dhms(total_seconds: int) -> str:
     """DD:HH:MM:SS since start (same style as Node-RED Seconds to DD:HH:MM:SS)."""
     total_seconds = max(0, int(total_seconds))
@@ -173,6 +187,12 @@ class AppRuntime:
         self.scan_led_synthetic = keys[i]
         self._scan_led_synth_i = i + 1
 
+    def _scan_led_only_if_enabled(self, ch: str | None) -> str | None:
+        """Never light the scan LED for a disabled channel (stale TX/expect or race with UI)."""
+        if ch is None or ch not in self.channels:
+            return None
+        return ch if self.channels[ch].channel_enabled else None
+
     def uptime_display(self) -> str:
         if self.started_at <= 0:
             return "—"
@@ -304,24 +324,24 @@ class AppRuntime:
                 "mno": ch.mno,
                 "atten_db": ch.atten_db,
                 "measurement_count": ch.measurement_count,
-                "rssi_dbm": round(ch.rssi_dbm, 2),
-                "rssi_avg": round(avg, 2),
-                "rssi_sd": round(sd, 2),
-                "chart_rssi_avg": list(ch.chart_rssi_avg)[-400:],
-                "chart_rssi_sd": list(ch.chart_rssi_sd)[-400:],
+                "rssi_dbm": _round_dbm_half(ch.rssi_dbm),
+                "rssi_avg": _round_dbm_half(avg),
+                "rssi_sd": _round_dbm_half(sd),
+                "chart_rssi_avg": _round_dbm_series(list(ch.chart_rssi_avg)[-400:]),
+                "chart_rssi_sd": _round_dbm_series(list(ch.chart_rssi_sd)[-400:]),
             }
 
         comp: dict[str, Any] = {
             "carrier_count": self.carrier_count,
             "composite_mw": round(self.composite_mw, 4),
-            "composite_avg_10": round(self.composite_avg_10, 2),
-            "composite_sd_10": round(self.composite_sd_10, 2),
-            "chart_composite_avg": list(self.chart_composite_avg)[-400:],
-            "chart_composite_sd": list(self.chart_composite_sd)[-400:],
-            "chart_all_cc_rssi": list(self.chart_all_cc_rssi)[-400:],
+            "composite_avg_10": _round_dbm_half(self.composite_avg_10),
+            "composite_sd_10": _round_dbm_half(self.composite_sd_10),
+            "chart_composite_avg": _round_dbm_series(list(self.chart_composite_avg)[-400:]),
+            "chart_composite_sd": _round_dbm_series(list(self.chart_composite_sd)[-400:]),
+            "chart_all_cc_rssi": _round_dbm_series(list(self.chart_all_cc_rssi)[-400:]),
         }
         if self.composite_dbm is not None:
-            comp["composite_dbm"] = round(self.composite_dbm, 2)
+            comp["composite_dbm"] = _round_dbm_half(self.composite_dbm)
         else:
             comp["composite_dbm"] = None
 
@@ -336,6 +356,7 @@ class AppRuntime:
         )
         if scan_led_channel is None and not settings.modem_qrxftm_scan:
             scan_led_channel = self.scan_led_synthetic
+        scan_led_channel = self._scan_led_only_if_enabled(scan_led_channel)
         out["controls"] = {
             "all_channels_on": bool(en) and all(en),
             "any_channel_on": any(en),

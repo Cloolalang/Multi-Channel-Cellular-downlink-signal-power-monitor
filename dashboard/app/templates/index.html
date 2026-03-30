@@ -10,8 +10,11 @@
   {% if w.type == "ui_switch" and w.label == "All channels on/off" %}
     <label class="field switch-row control-master">
       <span class="label">{{ w.label }}</span>
-      <input type="checkbox" class="js-control-all"
-        {% if c.all_channels_on %}checked{% endif %}/>
+      <span class="slider-toggle slider-toggle--md">
+        <input type="checkbox" class="slider-toggle__input js-control-all"
+          {% if c.all_channels_on %}checked{% endif %}/>
+        <span class="slider-toggle__ui" aria-hidden="true"></span>
+      </span>
     </label>
   {% elif w.type == "ui_button" %}
     {% if 'clear' in _lbl and 'chart' in _lbl %}
@@ -67,10 +70,13 @@
   {% if w.type == "ui_switch" %}
     <label class="field switch-row">
       <span class="label">{{ w.label }}</span>
-      <input type="checkbox" class="js-ch"
-        data-channel="{{ prefix }}"
-        data-field="channel_enabled"
-        {% if sec.channel_enabled %}checked{% endif %}/>
+      <span class="slider-toggle slider-toggle--sm">
+        <input type="checkbox" class="slider-toggle__input js-ch"
+          data-channel="{{ prefix }}"
+          data-field="channel_enabled"
+          {% if sec.channel_enabled %}checked{% endif %}/>
+        <span class="slider-toggle__ui" aria-hidden="true"></span>
+      </span>
     </label>
   {% elif w.type == "ui_text" %}
     <div class="field ui-text">
@@ -160,7 +166,10 @@
       {% else %}
         <label class="field switch-row control-master">
           <span class="label">All channels on/off</span>
-          <input type="checkbox" class="js-control-all" {% if snap.controls.all_channels_on %}checked{% endif %}/>
+          <span class="slider-toggle slider-toggle--md">
+            <input type="checkbox" class="slider-toggle__input js-control-all" {% if snap.controls.all_channels_on %}checked{% endif %}/>
+            <span class="slider-toggle__ui" aria-hidden="true"></span>
+          </span>
         </label>
         <div class="field ui-text control-static">
           <span class="label">Watchdog</span>

@@ -346,9 +346,9 @@
     if (snap.controls) {
       const sac = snap.controls.scan_active_channel;
       document.querySelectorAll("[data-scan-led]").forEach((el) => {
-        const want = sac != null && sac !== "";
         const key = el.getAttribute("data-scan-led");
-        const on = want && key != null && String(key) === String(sac);
+        const want = sac != null && sac !== "" && key != null;
+        const on = want && String(key) === String(sac);
         el.classList.toggle("scan-led--on", on);
         const g = el.querySelector(".scan-led-graphic");
         if (g) {

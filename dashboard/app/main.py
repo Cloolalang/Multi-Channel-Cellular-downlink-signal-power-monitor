@@ -222,6 +222,31 @@ async def _enqueue_qrxftm(channel: str, log_tag: str) -> tuple[bool, str | None]
     return True, cmd_stripped
 
 
+async def _await_qrxftm_consumed(channel: str, timeout_sec: float) -> bool:
+    """
+    Wait until the next expected +QRXFTM entry for `channel` is consumed.
+
+    Prevents cross-channel RSSI "bleed" when URCs are delayed/missing and the expect queue desynchronises.
+    Returns True if consumed; False on timeout (and drops one pending expect to re-sync).
+    """
+    deadline = time.time() + max(0.05, float(timeout_sec))
+    while time.time() < deadline:
+        async with runtime.lock:
+            head = runtime.qrxftm_expect[0] if runtime.qrxftm_expect else None
+            if head != channel:
+                return True
+        await asyncio.sleep(0.02)
+    # Timed out: drop one pending expect if it is still this channel so later URCs don't get mis-attributed.
+    async with runtime.lock:
+        head = runtime.qrxftm_expect[0] if runtime.qrxftm_expect else None
+        if head == channel:
+            runtime.qrxftm_expect.popleft()
+            runtime.at_log.append(
+                f"[mc-dspm] +QRXFTM timeout for {channel}; dropped one pending expect to avoid cross-channel bleed."
+            )
+    return False
+
+
 async def _channel_measurement_loop() -> None:
     """Round-robin: one AT+QRXFTM per enabled channel per pass (ch0 → ch1 → …), then repeat."""
     if not settings.modem_qrxftm_scan:
@@ -247,13 +272,15 @@ async def _channel_measurement_loop() -> None:
                 ok, _ = await _enqueue_qrxftm(p, f"scan {p}")
                 if ok:
                     any_sent = True
-                    # Pace TX so the modem can return +QRXFTM/OK before the next channel (avoids queue desync).
-                    if (
-                        not settings.mock_modem
-                        and sw.ser is not None
-                        and settings.scan_channel_delay_sec > 0
-                    ):
-                        await asyncio.sleep(settings.scan_channel_delay_sec)
+                    # On real modem: wait for +QRXFTM to be consumed (or timeout) before advancing.
+                    if (not settings.mock_modem) and sw.ser is not None:
+                        await _await_qrxftm_consumed(
+                            p,
+                            timeout_sec=max(0.2, float(settings.scan_channel_delay_sec or 0.0) + 0.8),
+                        )
+                        # Optional extra pacing after consumption (keeps modem calm on some FW).
+                        if settings.scan_channel_delay_sec > 0:
+                            await asyncio.sleep(settings.scan_channel_delay_sec)
             async with runtime.lock:
                 runtime.scan_active_channel = None
                 runtime.scan_count += 1
@@ -474,6 +501,8 @@ def _patch_channel(prefix: str, p: ChannelPatch) -> None:
         ch.channel_enabled = p.channel_enabled
         if not ch.channel_enabled:
             ch.clear_measurement_ui_state()
+            if runtime.scan_active_channel == prefix:
+                runtime.scan_active_channel = None
     if p.band_eutra is not None:
         ch.band_eutra = int(p.band_eutra)
         ch.sync_atten_from_band_ec25()
@@ -538,6 +567,8 @@ async def all_channels(body: AllChannelsBody) -> dict[str, Any]:
         if not body.channel_enabled:
             for p in channel_prefixes():
                 runtime.channels[p].clear_measurement_ui_state()
+            runtime.scan_active_channel = None
+            runtime.clear_scan_led_synthetic()
         snap = _snapshot()
     await _broadcast()
     return {"ok": True, **snap}

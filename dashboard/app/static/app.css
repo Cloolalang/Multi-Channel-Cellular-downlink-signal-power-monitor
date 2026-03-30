@@ -314,6 +314,112 @@ body {
   gap: 0.5rem;
 }
 
+/* Small iOS-style slider for channel / master on-off (native checkbox kept for JS). */
+.slider-toggle {
+  position: relative;
+  display: inline-block;
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  vertical-align: middle;
+  line-height: 0;
+}
+
+.slider-toggle__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  cursor: pointer;
+  z-index: 2;
+  opacity: 0;
+  /* Remove native checkbox drawing (Chrome/Edge/Firefox); keeps full hit target. */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: transparent;
+}
+
+.slider-toggle__ui {
+  display: block;
+  position: relative;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: #2a2a2a;
+  border: 1px solid var(--border);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  pointer-events: none;
+}
+
+.slider-toggle__ui::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  border-radius: 50%;
+  background: #f4f4f5;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition: left 0.15s ease, transform 0.15s ease;
+}
+
+.slider-toggle__input:checked + .slider-toggle__ui {
+  background: var(--base);
+  border-color: #0b8f95;
+}
+
+.slider-toggle__input:disabled + .slider-toggle__ui {
+  opacity: 0.45;
+}
+
+.slider-toggle__input:focus-visible + .slider-toggle__ui {
+  outline: 2px solid var(--base);
+  outline-offset: 2px;
+}
+
+.slider-toggle--sm {
+  width: 36px;
+  height: 20px;
+}
+
+.slider-toggle--sm .slider-toggle__ui {
+  width: 36px;
+  height: 20px;
+}
+
+.slider-toggle--sm .slider-toggle__ui::after {
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  transform: translateY(-50%);
+}
+
+.slider-toggle--sm .slider-toggle__input:checked + .slider-toggle__ui::after {
+  left: calc(100% - 3px - 14px);
+}
+
+.slider-toggle--md {
+  width: 44px;
+  height: 24px;
+}
+
+.slider-toggle--md .slider-toggle__ui {
+  width: 44px;
+  height: 24px;
+}
+
+.slider-toggle--md .slider-toggle__ui::after {
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  transform: translateY(-50%);
+}
+
+.slider-toggle--md .slider-toggle__input:checked + .slider-toggle__ui::after {
+  left: calc(100% - 3px - 18px);
+}
+
 input[type="number"], input[type="text"], select {
   background: #0d0d0d;
   border: 1px solid var(--border);
