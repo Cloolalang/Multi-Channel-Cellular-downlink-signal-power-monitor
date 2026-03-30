@@ -295,7 +295,7 @@
       </fieldset>
       <fieldset class="settings-fieldset">
         <legend>Gauge scale (dashboard)</legend>
-        <p class="control-hint">Bar-gauge scale for the dashboard (min/max and optional segment split). Saved with <strong>Save</strong> and restored on restart.</p>
+        <p class="control-hint">Bar-gauge scale for the dashboard (min/max). Saved with <strong>Save</strong> and restored on restart.</p>
         <div class="settings-gauge-grid">
           <label class="field"><span class="label">Gauge min (dBm)</span>
             <input type="number" name="cfg_gauge_min" step="any"
@@ -303,12 +303,6 @@
           <label class="field"><span class="label">Gauge max (dBm)</span>
             <input type="number" name="cfg_gauge_max" step="any"
               value="{% if snap.controls.gauge_max is not none %}{{ snap.controls.gauge_max }}{% endif %}"/></label>
-          <label class="field"><span class="label">Gauge seg1 (optional)</span>
-            <input type="number" name="cfg_gauge_seg1" step="any"
-              value="{% if snap.controls.gauge_seg1 is not none %}{{ snap.controls.gauge_seg1 }}{% endif %}"/></label>
-          <label class="field"><span class="label">Gauge seg2 (optional)</span>
-            <input type="number" name="cfg_gauge_seg2" step="any"
-              value="{% if snap.controls.gauge_seg2 is not none %}{{ snap.controls.gauge_seg2 }}{% endif %}"/></label>
         </div>
       </fieldset>
       <fieldset class="settings-fieldset">

@@ -228,26 +228,6 @@
     const c0 = el.dataset.c0 || "#e74c3c";
     const c1 = el.dataset.c1 || "#f1c40f";
     const c2 = el.dataset.c2 || "#2ecc71";
-    const ctrl = window.__lastControls;
-    if (
-      ctrl &&
-      bounds &&
-      ctrl.gauge_seg1 != null &&
-      ctrl.gauge_seg2 != null &&
-      Number.isFinite(Number(ctrl.gauge_seg1)) &&
-      Number.isFinite(Number(ctrl.gauge_seg2))
-    ) {
-      const min = bounds.min;
-      const max = bounds.max;
-      const span = max - min;
-      if (span > 0) {
-        const s1 = Number(ctrl.gauge_seg1);
-        const s2 = Number(ctrl.gauge_seg2);
-        const p1 = Math.max(0, Math.min(100, ((s1 - min) / span) * 100));
-        const p2 = Math.max(0, Math.min(100, ((s2 - min) / span) * 100));
-        return `linear-gradient(90deg, ${c0} 0%, ${c1} ${p1}%, ${c2} ${p2}%, ${c2} 100%)`;
-      }
-    }
     return `linear-gradient(90deg, ${c0}, ${c1}, ${c2})`;
   }
 
@@ -609,16 +589,12 @@
               if (j.mno_common_preset) applyMnoPresetToForm(j.mno_common_preset);
               const gmn = f.querySelector('[name="cfg_gauge_min"]');
               const gmx = f.querySelector('[name="cfg_gauge_max"]');
-              const gs1 = f.querySelector('[name="cfg_gauge_seg1"]');
-              const gs2 = f.querySelector('[name="cfg_gauge_seg2"]');
               const setG = (el, val) => {
                 if (!el) return;
                 el.value = val == null || val === undefined ? "" : String(val);
               };
               setG(gmn, j.gauge_min);
               setG(gmx, j.gauge_max);
-              setG(gs1, j.gauge_seg1);
-              setG(gs2, j.gauge_seg2);
               if (j.band_attenuation_db) applyBandAttenToForm(j.band_attenuation_db);
             })
             .catch(() => {});
@@ -651,8 +627,6 @@
         band_attenuation_db: collectBandAttenTable(),
         gauge_min: parseCfgNullableFloat(fd.get("cfg_gauge_min")),
         gauge_max: parseCfgNullableFloat(fd.get("cfg_gauge_max")),
-        gauge_seg1: parseCfgNullableFloat(fd.get("cfg_gauge_seg1")),
-        gauge_seg2: parseCfgNullableFloat(fd.get("cfg_gauge_seg2")),
       };
       if (!body.serial_port) {
         if (status) {
@@ -691,6 +665,38 @@
             status.className = "settings-save-status is-err";
           }
         });
+    });
+  })();
+
+  // Live gauge scale apply (typing into Gauge min/max updates the gauges immediately).
+  (function initGaugeScaleLivePatch() {
+    const form = document.getElementById("form-dashboard-config");
+    if (!form) return;
+    const gmn = form.querySelector('[name="cfg_gauge_min"]');
+    const gmx = form.querySelector('[name="cfg_gauge_max"]');
+    if (!gmn && !gmx) return;
+
+    const doPatch = debounce(() => {
+      const body = {
+        gauge_min: parseCfgNullableFloat(gmn ? gmn.value : null),
+        gauge_max: parseCfgNullableFloat(gmx ? gmx.value : null),
+      };
+      fetch("/api/runtime/gauge-ranges", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+        .then((r) => r.json())
+        .then((j) => {
+          if (j && j.ok) applySnap(j);
+        })
+        .catch(() => {});
+    }, 200);
+
+    [gmn, gmx].forEach((el) => {
+      if (!el) return;
+      el.addEventListener("input", doPatch);
+      el.addEventListener("change", doPatch);
     });
   })();
 

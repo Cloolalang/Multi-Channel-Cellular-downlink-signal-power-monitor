@@ -31,8 +31,10 @@ from app.flows_inventory import (
 from app import ec25_calibration
 from app.dashboard_config import (
     apply_dashboard_config_file,
+    apply_saved_channel_state,
     clamp_smooth_samples,
     config_path,
+    consume_channels_state_from_file,
     get_mno_common_preset_stored_dict,
     save_dashboard_config_file,
     set_mno_common_preset_stored_dict,
@@ -71,8 +73,6 @@ class GaugeRangePatch(BaseModel):
 
     gauge_min: float | None = None
     gauge_max: float | None = None
-    gauge_seg1: float | None = None
-    gauge_seg2: float | None = None
 
 
 class DashboardConfigBody(BaseModel):
@@ -92,8 +92,6 @@ class DashboardConfigBody(BaseModel):
     band_attenuation_db: dict[str, Any] | None = None
     gauge_min: float | None = None
     gauge_max: float | None = None
-    gauge_seg1: float | None = None
-    gauge_seg2: float | None = None
 
 
 def _connection_public() -> dict[str, Any]:
@@ -133,7 +131,7 @@ def _apply_dashboard_settings(body: DashboardConfigBody, rt: AppRuntime) -> None
         set_mno_common_preset_stored_dict(body.mno_common_preset)
     if "band_attenuation_db" in patches and body.band_attenuation_db is not None:
         ec25_calibration.configure_band_attenuation(body.band_attenuation_db)
-    for k in ("gauge_min", "gauge_max", "gauge_seg1", "gauge_seg2"):
+    for k in ("gauge_min", "gauge_max"):
         if k in patches:
             setattr(rt, k, getattr(body, k))
 
@@ -365,6 +363,12 @@ async def lifespan(app: FastAPI):
         else:
             for p in channel_prefixes():
                 runtime.channels[p].sync_atten_from_band_ec25()
+        saved_ch = consume_channels_state_from_file()
+        if saved_ch:
+            apply_saved_channel_state(runtime, saved_ch)
+            runtime.at_log.append(
+                "[mc-dspm] Per-channel enable/RF state restored from dashboard_config.json (`channels`)."
+            )
 
     serial_worker = SerialWorker(
         runtime,
@@ -447,12 +451,7 @@ async def index(request: Request) -> HTMLResponse:
 @app.get("/api/config/dashboard")
 async def get_dashboard_config() -> dict[str, Any]:
     async with runtime.lock:
-        gm, gx, g1, g2 = (
-            runtime.gauge_min,
-            runtime.gauge_max,
-            runtime.gauge_seg1,
-            runtime.gauge_seg2,
-        )
+        gm, gx = (runtime.gauge_min, runtime.gauge_max)
     return {
         "ok": True,
         "serial_port": settings.serial_port,
@@ -470,8 +469,6 @@ async def get_dashboard_config() -> dict[str, Any]:
         "band_attenuation_db": ec25_calibration.band_atten_dict_for_api(),
         "gauge_min": gm,
         "gauge_max": gx,
-        "gauge_seg1": g1,
-        "gauge_seg2": g2,
         "config_path": str(config_path()),
     }
 
@@ -524,10 +521,6 @@ async def patch_gauge_ranges(body: GaugeRangePatch) -> dict[str, Any]:
             runtime.gauge_min = data["gauge_min"]
         if "gauge_max" in data:
             runtime.gauge_max = data["gauge_max"]
-        if "gauge_seg1" in data:
-            runtime.gauge_seg1 = data["gauge_seg1"]
-        if "gauge_seg2" in data:
-            runtime.gauge_seg2 = data["gauge_seg2"]
         snap = _snapshot()
     save_dashboard_config_file(settings, runtime)
     await _broadcast()
@@ -541,6 +534,7 @@ async def patch_runtime(channel: str, body: ChannelPatch) -> dict[str, Any]:
     async with runtime.lock:
         _patch_channel(channel, body)
         snap = _snapshot()
+    save_dashboard_config_file(settings, runtime)
     await _broadcast()
     return {"ok": True, **snap}
 
@@ -570,6 +564,7 @@ async def all_channels(body: AllChannelsBody) -> dict[str, Any]:
             runtime.scan_active_channel = None
             runtime.clear_scan_led_synthetic()
         snap = _snapshot()
+    save_dashboard_config_file(settings, runtime)
     await _broadcast()
     return {"ok": True, **snap}
 
@@ -602,6 +597,7 @@ async def preload_mno_common() -> dict[str, Any]:
     async with runtime.lock:
         runtime.apply_mno_common_preset(_mno_common_preset)
         snap = _snapshot()
+    save_dashboard_config_file(settings, runtime)
     await _broadcast()
     return {"ok": True, **snap}
 

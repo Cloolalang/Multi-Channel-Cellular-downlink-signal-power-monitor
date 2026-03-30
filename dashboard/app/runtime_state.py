@@ -162,8 +162,6 @@ class AppRuntime:
     # Control panel: bar-gauge scale for dBm-like metrics (defaults -30 … +25 dBm).
     gauge_min: float | None = -30.0
     gauge_max: float | None = 25.0
-    gauge_seg1: float | None = None
-    gauge_seg2: float | None = None
     # Process start (wall clock) for control-panel UpTime.
     started_at: float = 0.0
     # Full QRXFTM scan rounds since deploy (control panel).
@@ -363,8 +361,6 @@ class AppRuntime:
             "channels_enabled_count": sum(1 for x in en if x),
             "gauge_min": self.gauge_min,
             "gauge_max": self.gauge_max,
-            "gauge_seg1": self.gauge_seg1,
-            "gauge_seg2": self.gauge_seg2,
             "uptime": self.uptime_display(),
             "watchdog": self.watchdog_display(),
             "scan_count": self.scan_count,
