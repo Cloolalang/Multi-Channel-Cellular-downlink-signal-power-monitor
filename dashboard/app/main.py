@@ -242,6 +242,8 @@ async def _channel_measurement_loop() -> None:
                 async with runtime.lock:
                     if not runtime.channels[p].channel_enabled:
                         continue
+                    runtime.scan_active_channel = p
+                await _broadcast()
                 ok, _ = await _enqueue_qrxftm(p, f"scan {p}")
                 if ok:
                     any_sent = True
@@ -253,6 +255,7 @@ async def _channel_measurement_loop() -> None:
                     ):
                         await asyncio.sleep(settings.scan_channel_delay_sec)
             async with runtime.lock:
+                runtime.scan_active_channel = None
                 runtime.scan_count += 1
             await _broadcast()
             if any_sent:
@@ -262,6 +265,7 @@ async def _channel_measurement_loop() -> None:
         except Exception as e:
             async with runtime.lock:
                 runtime.at_log.append(f"[mc-dspm] scan loop error: {e!r}")
+                runtime.scan_active_channel = None
             await asyncio.sleep(1.0)
 
 
@@ -286,6 +290,12 @@ async def _tick_loop() -> None:
     while True:
         await asyncio.sleep(interval)
         async with runtime.lock:
+            if settings.modem_qrxftm_scan:
+                runtime.clear_scan_led_synthetic()
+            elif _use_synthetic_rssi():
+                runtime.advance_scan_led_synthetic()
+            else:
+                runtime.clear_scan_led_synthetic()
             if _use_synthetic_rssi():
                 for p in channel_prefixes():
                     runtime.channels[p].tick_mock()

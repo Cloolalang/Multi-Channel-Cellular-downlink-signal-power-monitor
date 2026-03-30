@@ -154,6 +154,24 @@ class AppRuntime:
     started_at: float = 0.0
     # Full QRXFTM scan rounds since deploy (control panel).
     scan_count: int = 0
+    # Which channel (ch0…ch13) is currently being visited in the AT+QRXFTM round-robin (None between steps/rounds).
+    scan_active_channel: str | None = None
+    # When PT_MODEM_QRXFTM_SCAN=false but the UI still runs synthetic RSSI, rotate this for LED feedback only.
+    scan_led_synthetic: str | None = None
+    _scan_led_synth_i: int = 0
+
+    def clear_scan_led_synthetic(self) -> None:
+        self.scan_led_synthetic = None
+        self._scan_led_synth_i = 0
+
+    def advance_scan_led_synthetic(self) -> None:
+        keys = [p for p in channel_prefixes() if self.channels[p].channel_enabled]
+        if not keys:
+            self.clear_scan_led_synthetic()
+            return
+        i = self._scan_led_synth_i % len(keys)
+        self.scan_led_synthetic = keys[i]
+        self._scan_led_synth_i = i + 1
 
     def uptime_display(self) -> str:
         if self.started_at <= 0:
@@ -312,6 +330,12 @@ class AppRuntime:
         out: dict[str, Any] = {p: pack_ch(self.channels[p]) for p in keys}
         out["composite"] = comp
         out["at_log"] = list(self.at_log)[-50:]
+        # LED: prefer channel awaiting +QRXFTM (HW); else scan loop's current ch; else synthetic spinner when scan is off.
+        scan_led_channel: str | None = (
+            self.qrxftm_expect[0] if self.qrxftm_expect else self.scan_active_channel
+        )
+        if scan_led_channel is None and not settings.modem_qrxftm_scan:
+            scan_led_channel = self.scan_led_synthetic
         out["controls"] = {
             "all_channels_on": bool(en) and all(en),
             "any_channel_on": any(en),
@@ -323,5 +347,7 @@ class AppRuntime:
             "uptime": self.uptime_display(),
             "watchdog": self.watchdog_display(),
             "scan_count": self.scan_count,
+            "modem_qrxftm_scan": settings.modem_qrxftm_scan,
+            "scan_active_channel": scan_led_channel,
         }
         return out

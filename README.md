@@ -96,6 +96,8 @@ Use **Save** to write `dashboard_config.json`. **Pre-load MNO Common** on the da
 
 **UX notes:** Turning a **channel off** clears that channel’s gauges and charts until it is enabled again. **Composite** power combines linear power from **enabled** channels only.
 
+**Scan LEDs:** Beside each **Channel n** title, a small round indicator shows scan activity. **Black** = idle for that channel; **bright green** = active step—either the channel visited in the `AT+QRXFTM` round-robin or (on hardware) the channel at the front of the pending `+QRXFTM` queue. If **`PT_MODEM_QRXFTM_SCAN=false`** but the app uses **synthetic RSSI** (mock modem or serial not open), the green highlight rotates through **enabled** channels on the UI tick. Live state is in the WebSocket snapshot under `controls.scan_active_channel` (and `controls.modem_qrxftm_scan` mirrors the env flag).
+
 ## Run the dashboard
 
 From **`dashboard/`**:

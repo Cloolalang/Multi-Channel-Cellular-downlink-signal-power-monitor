@@ -343,6 +343,20 @@
       }
     }
     if (snap.controls) window.__lastControls = snap.controls;
+    if (snap.controls) {
+      const sac = snap.controls.scan_active_channel;
+      document.querySelectorAll("[data-scan-led]").forEach((el) => {
+        const want = sac != null && sac !== "";
+        const key = el.getAttribute("data-scan-led");
+        const on = want && key != null && String(key) === String(sac);
+        el.classList.toggle("scan-led--on", on);
+        const g = el.querySelector(".scan-led-graphic");
+        if (g) {
+          g.setAttribute("fill", on ? "#39ff14" : "#000000");
+          g.setAttribute("stroke", on ? "#e8ffe8" : "#525252");
+        }
+      });
+    }
     CHANNEL_KEYS.forEach((ch) => {
       const d = snap[ch];
       if (!d) return;
