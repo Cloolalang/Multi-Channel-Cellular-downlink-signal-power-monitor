@@ -353,6 +353,10 @@ async def _channel_measurement_loop() -> None:
             if sw is None:
                 await asyncio.sleep(0.5)
                 continue
+            # No modem connected and not in mock mode: back off to avoid busy-spinning.
+            if not settings.mock_modem and sw.ser is None:
+                await asyncio.sleep(2.0)
+                continue
             any_sent = False
             for p in channel_prefixes():
                 async with runtime.lock:

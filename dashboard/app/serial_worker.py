@@ -116,12 +116,15 @@ class SerialWorker:
         while True:
             line = await self._out_q.get()
             if self.mock or self.ser is None:
-                async with self.runtime.lock:
-                    # UI reads at_log only; keep mock modem responses visible.
-                    self.runtime.at_log.append("< OK (mock)")
-                    self.runtime.serial_rx_log.append("OK (mock)")
-                if self.on_line:
-                    self.on_line("OK")
+                if self.mock:
+                    # Intentional mock mode: echo fake OK so the UI sees responses.
+                    async with self.runtime.lock:
+                        self.runtime.at_log.append("< OK (mock)")
+                        self.runtime.serial_rx_log.append("OK (mock)")
+                    if self.on_line:
+                        self.on_line("OK")
+                # Serial failed to open: silently discard — scan loop backs off so this
+                # queue should be empty in normal operation.
                 continue
             loop = asyncio.get_event_loop()
             try:
