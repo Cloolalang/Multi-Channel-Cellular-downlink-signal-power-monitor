@@ -33,6 +33,10 @@
       <span class="label">{{ w.label }}</span>
       <span class="value js-ctrl-watchdog watchdog-indicator">{{ c.watchdog }}</span>
     </div>
+    <div class="field ui-text control-static">
+      <span class="label">Modem state</span>
+      <span class="value js-ctrl-modem-state modem-conn-status modem-conn-status--bad">Modem not connected</span>
+    </div>
     {% elif w.label == "UpTime" %}
     <div class="field ui-text control-static">
       <span class="label">{{ w.label }}</span>
@@ -157,7 +161,7 @@
 <section class="control-strip">
   <article class="panel control-panel">
     <h2>Controls</h2>
-    <p class="control-hint">This build targets <strong>LTE (4G)</strong> (E-UTRA / downlink FTM). Master switch and shortcuts match the Sector 1 <em>Controls</em> group from flows. Gauge min/max and segment limits are on the <strong>Settings</strong> tab. Default <code>PT_SERIAL_PORT=COM40</code>, <code>PT_MOCK_MODEM=false</code>: real modem RX parses <code>+QRXFTM</code> (2nd value = RSSI dBm). Use <code>PT_MOCK_MODEM=true</code> for development without hardware. <code>AT+QRFTESTMODE</code> runs once at startup, then one <code>AT+QRXFTM</code> per enabled channel per pass, round-robin. <code>PT_MODEM_QRXFTM_SCAN=false</code> stops auto scans. <code>PT_SCAN_CHANNEL_DELAY_SEC</code> (default 1s) spaces each channel so the modem can answer before the next TX. <code>PT_SCAN_ROUND_DELAY_SEC</code> pauses after each full pass.</p>
+    <p class="control-hint">This build targets <strong>LTE (4G)</strong> (E-UTRA / downlink FTM). Master switch and shortcuts match the Sector 1 <em>Controls</em> group from flows. Gauge min/max and segment limits are on the <strong>Settings</strong> tab. Default <code>PT_SERIAL_PORT=COM60</code>, <code>PT_MOCK_MODEM=false</code>: real modem RX parses <code>+QRXFTM</code> (2nd value = RSSI dBm). Use <code>PT_MOCK_MODEM=true</code> for development without hardware. <code>AT+QRFTESTMODE</code> runs once at startup, then one <code>AT+QRXFTM</code> per enabled channel per pass, round-robin. <code>PT_MODEM_QRXFTM_SCAN=false</code> stops auto scans. <code>PT_SCAN_CHANNEL_DELAY_SEC</code> (default 1s) spaces each channel so the modem can answer before the next TX. <code>PT_SCAN_ROUND_DELAY_SEC</code> pauses after each full pass.</p>
     <div class="control-actions">
       {% if controls_widgets|length > 0 %}
         {% for w in controls_widgets %}
@@ -174,6 +178,10 @@
         <div class="field ui-text control-static">
           <span class="label">Watchdog</span>
           <span class="value js-ctrl-watchdog watchdog-indicator">{{ snap.controls.watchdog }}</span>
+        </div>
+        <div class="field ui-text control-static">
+          <span class="label">Modem state</span>
+          <span class="value js-ctrl-modem-state modem-conn-status modem-conn-status--bad">Modem not connected</span>
         </div>
         <div class="field ui-text control-static">
           <span class="label">UpTime</span>
@@ -241,14 +249,14 @@
 <section class="settings-wrap">
   <article class="panel settings-panel">
     <h2>Connection &amp; timing</h2>
-    <p class="control-hint">Everything below is saved to <code>{{ dashboard_config_path }}</code> and reloaded on the next app start. Changing the serial port, baud rate, or mock mode reopens the port immediately. Environment overrides still work for connection via <code>PT_*</code> before the file is merged at startup.</p>
+    <p class="control-hint">Everything below is saved to <code>{{ dashboard_config_path }}</code> and reloaded on the next app start. Changing serial port or baud rate reopens the port immediately. Mock mode is controlled from environment (<code>PT_MOCK_MODEM</code>) when launching the app.</p>
     <form id="form-dashboard-config" class="settings-form">
       <fieldset class="settings-fieldset">
         <legend>Serial</legend>
         <label class="field">
           <span class="label">COM / serial port</span>
           <input type="text" name="serial_port" required autocomplete="off"
-            value="{{ settings.serial_port }}" placeholder="COM40 or /dev/ttyUSB0"/>
+            value="{{ settings.serial_port }}" placeholder="COM60 or /dev/ttyUSB0"/>
         </label>
         <label class="field">
           <span class="label">Baud rate</span>
@@ -256,9 +264,10 @@
             value="{{ settings.baudrate }}"/>
         </label>
         <label class="field switch-row">
-          <span class="label">Mock modem (no hardware)</span>
-          <input type="checkbox" name="mock_modem" {% if settings.mock_modem %}checked{% endif %}/>
+          <span class="label">Mock modem (CLI/env only)</span>
+          <input type="checkbox" name="mock_modem" {% if settings.mock_modem %}checked{% endif %} disabled/>
         </label>
+        <p class="control-hint">Set <code>PT_MOCK_MODEM=true</code> when launching the app to use mock mode. This toggle is read-only in the dashboard.</p>
       </fieldset>
       <fieldset class="settings-fieldset">
         <legend>Timing</legend>

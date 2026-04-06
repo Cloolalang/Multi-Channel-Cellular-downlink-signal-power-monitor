@@ -51,6 +51,34 @@ body {
 .meta { display: flex; gap: 1rem; font-size: 0.85rem; opacity: 0.95; flex-shrink: 0; }
 .mock { font-weight: 600; }
 
+.modem-state {
+  display: inline-block;
+  padding: 0.16rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+}
+
+.modem-state--ok {
+  color: #a9ffbf;
+  background: rgba(46, 204, 113, 0.2);
+  border-color: rgba(169, 255, 191, 0.5);
+}
+
+.modem-state--degraded {
+  color: #ffe08a;
+  background: rgba(241, 196, 15, 0.2);
+  border-color: rgba(255, 224, 138, 0.5);
+}
+
+.modem-state--offline {
+  color: #ffb1b1;
+  background: rgba(231, 76, 60, 0.22);
+  border-color: rgba(255, 177, 177, 0.56);
+}
+
 .app-tabs {
   display: flex;
   gap: 0;
@@ -172,6 +200,18 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+.modem-conn-status {
+  font-weight: 700;
+}
+
+.modem-conn-status--ok {
+  color: #7dffb0;
+}
+
+.modem-conn-status--bad {
+  color: #ff7e7e;
+}
+
 .watchdog-indicator {
   font-weight: 800;
   font-size: 1.15rem;
@@ -243,6 +283,11 @@ body {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 1rem;
+}
+
+.panel-stale {
+  border-color: #6f4a2f;
+  box-shadow: inset 0 0 0 1px rgba(241, 196, 15, 0.22);
 }
 
 .panel h2 {

@@ -129,11 +129,6 @@ def apply_dashboard_config_file(s: Settings, runtime: Any | None = None) -> bool
         except (TypeError, ValueError):
             pass
 
-    def _set_bool(name: str) -> None:
-        if name not in raw:
-            return
-        setattr(s, name, bool(raw[name]))
-
     def _set_float(name: str) -> None:
         if name not in raw:
             return
@@ -144,7 +139,6 @@ def apply_dashboard_config_file(s: Settings, runtime: Any | None = None) -> bool
 
     _set_str("serial_port")
     _set_int("baudrate")
-    _set_bool("mock_modem")
     _set_float("scan_channel_delay_sec")
     _set_float("scan_round_delay_sec")
     _set_float("ws_push_hz")
@@ -194,7 +188,6 @@ def save_dashboard_config_file(s: Settings, runtime: Any | None = None) -> None:
     data = {
         "serial_port": s.serial_port,
         "baudrate": s.baudrate,
-        "mock_modem": s.mock_modem,
         "scan_channel_delay_sec": s.scan_channel_delay_sec,
         "scan_round_delay_sec": s.scan_round_delay_sec,
         "ws_push_hz": s.ws_push_hz,

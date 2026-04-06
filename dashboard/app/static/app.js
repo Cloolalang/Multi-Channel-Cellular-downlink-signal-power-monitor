@@ -329,6 +329,25 @@
       const fwEl = document.getElementById("hdr-modem-fw");
       if (hwEl) hwEl.textContent = snap.modem.hw || "—";
       if (fwEl) fwEl.textContent = snap.modem.fw || "—";
+      const stateEl = document.getElementById("hdr-modem-state");
+      if (stateEl) {
+        const st = String(snap.modem.state || "degraded").toLowerCase();
+        stateEl.classList.remove("modem-state--ok", "modem-state--degraded", "modem-state--offline");
+        if (st === "ok") stateEl.classList.add("modem-state--ok");
+        else if (st === "offline") stateEl.classList.add("modem-state--offline");
+        else stateEl.classList.add("modem-state--degraded");
+        stateEl.textContent = st === "ok" ? "MODEM OK" : st === "offline" ? "MODEM OFFLINE" : "MODEM DEGRADED";
+        stateEl.title = snap.modem.status || "";
+      }
+      document.querySelectorAll(".js-ctrl-modem-state").forEach((el) => {
+        const st = String(snap.modem.state || "offline").toLowerCase();
+        const serialOpen = !!(snap.connection && snap.connection.serial_open);
+        const connected = serialOpen && st !== "offline";
+        el.textContent = connected ? "Modem connected" : "Modem not connected";
+        el.classList.toggle("modem-conn-status--ok", connected);
+        el.classList.toggle("modem-conn-status--bad", !connected);
+        el.title = snap.modem.status || "";
+      });
     }
     if (snap.controls) window.__lastControls = snap.controls;
     if (snap.controls) {
@@ -348,6 +367,9 @@
     CHANNEL_KEYS.forEach((ch) => {
       const d = snap[ch];
       if (!d) return;
+      document.querySelectorAll(`article.panel[data-group="${ch}"]`).forEach((panel) => {
+        panel.classList.toggle("panel-stale", !!d.stale);
+      });
       document.querySelectorAll(`.js-ch[data-channel="${ch}"]`).forEach((el) => {
         const field = el.dataset.field;
         if (!field) return;
@@ -588,6 +610,7 @@
               const css = f.querySelector('[name="composite_smooth_samples"]');
               if (sp) sp.value = j.serial_port ?? "";
               if (bd) bd.value = j.baudrate ?? 115200;
+              /* Mock mode is CLI/env-controlled; show current state read-only. */
               if (mk) mk.checked = !!j.mock_modem;
               if (sc) sc.value = j.scan_channel_delay_sec ?? 1;
               if (sr) sr.value = j.scan_round_delay_sec ?? 0;
@@ -618,11 +641,9 @@
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const fd = new FormData(form);
-      const mockEl = form.querySelector('[name="mock_modem"]');
       const body = {
         serial_port: String(fd.get("serial_port") || "").trim(),
         baudrate: parseInt(String(fd.get("baudrate") || "115200"), 10),
-        mock_modem: mockEl ? mockEl.checked : false,
         scan_channel_delay_sec: parseFloat(String(fd.get("scan_channel_delay_sec") || "1")),
         scan_round_delay_sec: parseFloat(String(fd.get("scan_round_delay_sec") || "0")),
         ws_push_hz: parseFloat(String(fd.get("ws_push_hz") || "4")),

@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="PT_", env_file=".env", extra="ignore")
 
     flows_json: Path = Path(__file__).resolve().parents[2] / "flows.json"
-    serial_port: str = "COM40"
+    serial_port: str = "COM60"
     baudrate: int = 115200
     # Set PT_MOCK_MODEM=true for UI dev without hardware (synthetic RSSI + fake OK on TX).
     mock_modem: bool = False
@@ -27,6 +27,16 @@ class Settings(BaseSettings):
     modem_qrxftm_scan: bool = True
     # Pause after finishing ch0..ch13 before starting the next full round (0 = back-to-back rounds).
     scan_round_delay_sec: float = 0.0
+    # While in HW mode, retry opening the configured serial port this often when unavailable/busy.
+    serial_reconnect_interval_sec: float = 2.0
+    # If a channel has no fresh +QRXFTM sample for this long, treat displayed values as stale.
+    channel_stale_sec: float = 6.0
+    # Modem health thresholds (no serial RX age).
+    modem_degraded_sec: float = 4.0
+    modem_offline_sec: float = 10.0
+    # Modem health thresholds (consecutive +QRXFTM step timeouts).
+    modem_degraded_timeout_streak: int = 2
+    modem_offline_timeout_streak: int = 5
 
 
 settings = Settings()

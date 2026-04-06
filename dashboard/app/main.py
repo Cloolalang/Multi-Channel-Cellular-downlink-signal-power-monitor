@@ -54,6 +54,8 @@ _widgets_channels: list[list[dict[str, Any]]] = [[] for _ in range(CHANNEL_COUNT
 _widgets_composite: list[dict[str, Any]] = []
 _widgets_controls: list[dict[str, Any]] = []
 _mno_common_preset: MnoCommonPreset | None = None
+_last_serial_reopen_attempt_at: float = 0.0
+_ftm_rearming: bool = False
 
 
 class ChannelPatch(BaseModel):
@@ -83,7 +85,6 @@ class DashboardConfigBody(BaseModel):
 
     serial_port: str
     baudrate: int = 115200
-    mock_modem: bool = False
     scan_channel_delay_sec: float = 1.0
     scan_round_delay_sec: float = 0.0
     ws_push_hz: float = 4.0
@@ -104,7 +105,7 @@ def _connection_public() -> dict[str, Any]:
         if sw.mock:
             serial_open = True
         else:
-            serial_open = sw.ser is not None
+            serial_open = bool(sw.ser is not None and getattr(sw.ser, "is_open", True))
     return {
         "serial_port": settings.serial_port,
         "baudrate": settings.baudrate,
@@ -116,6 +117,12 @@ def _connection_public() -> dict[str, Any]:
 def _snapshot() -> dict[str, Any]:
     snap = runtime.snapshot()
     snap["connection"] = _connection_public()
+    conn = snap["connection"]
+    if (not conn.get("mock_modem")) and (not conn.get("serial_open")):
+        modem = snap.get("modem") or {}
+        modem["state"] = "offline"
+        modem["status"] = "Serial port not open"
+        snap["modem"] = modem
     return snap
 
 
@@ -123,7 +130,6 @@ def _apply_dashboard_settings(body: DashboardConfigBody, rt: AppRuntime) -> None
     patches = body.model_dump(exclude_unset=True)
     settings.serial_port = body.serial_port.strip() or settings.serial_port
     settings.baudrate = max(300, int(body.baudrate))
-    settings.mock_modem = bool(body.mock_modem)
     settings.scan_channel_delay_sec = max(0.0, float(body.scan_channel_delay_sec))
     settings.scan_round_delay_sec = max(0.0, float(body.scan_round_delay_sec))
     settings.ws_push_hz = max(0.1, float(body.ws_push_hz))
@@ -158,18 +164,73 @@ async def _reconnect_serial() -> None:
         settings.mock_modem,
     )
     async with runtime.lock:
-        runtime.at_log.append(
-            f"[mc-dspm] Reconnected — port {settings.serial_port} @ {settings.baudrate} baud, "
-            f"MOCK={settings.mock_modem}."
-        )
         if not settings.mock_modem and serial_worker.ser is None:
             runtime.at_log.append(
-                "[mc-dspm] Serial open failed — UI uses synthetic RSSI until the port is available."
+                f"[mc-dspm] Reconnect failed — port {settings.serial_port} @ {settings.baudrate} baud. "
+                "No live modem samples until the port is available."
+            )
+        else:
+            runtime.at_log.append(
+                f"[mc-dspm] Reconnected — port {settings.serial_port} @ {settings.baudrate} baud, "
+                f"MOCK={settings.mock_modem}."
             )
     if not settings.mock_modem and serial_worker.ser is not None:
         await _modem_qrftestmode_prep()
         asyncio.create_task(_probe_modem_identity())
         _reader_task = asyncio.create_task(serial_worker.reader_loop())
+
+
+async def _ensure_serial_connected() -> None:
+    """Best-effort reconnect loop for HW mode when COM port is busy/unavailable."""
+    global _last_serial_reopen_attempt_at
+    if settings.mock_modem or serial_worker is None:
+        return
+    sw = serial_worker
+    if sw.ser is not None and getattr(sw.ser, "is_open", True):
+        return
+    now = time.time()
+    interval = max(0.5, float(settings.serial_reconnect_interval_sec))
+    if (now - _last_serial_reopen_attempt_at) < interval:
+        return
+    _last_serial_reopen_attempt_at = now
+    await _reconnect_serial()
+
+
+def _line_indicates_ftm_restricted(text: str) -> bool:
+    up = (text or "").strip().upper()
+    return ("RESTRICTED" in up) and ("FTM" in up)
+
+
+async def _try_rearm_ftm(reason: str) -> bool:
+    """Attempt to restore modem FTM state after reconnect/resume and probe with AT+QRXFTM?."""
+    global _ftm_rearming
+    if _ftm_rearming:
+        return False
+    if settings.mock_modem or serial_worker is None or serial_worker.ser is None:
+        return False
+    _ftm_rearming = True
+    try:
+        async with runtime.lock:
+            runtime.at_log.append(f"[mc-dspm] Re-arming FTM ({reason}) ...")
+        await _modem_qrftestmode_prep()
+        # Probe with lightweight command that should succeed in FTM context.
+        probe = await _run_at_collect_lines("AT+QRXFTM?", timeout_sec=1.8)
+        ok = any("QRXFTM" in (ln or "").upper() for ln in probe) and not any(
+            _line_indicates_ftm_restricted(ln) for ln in probe
+        )
+        async with runtime.lock:
+            if ok:
+                runtime.clear_ftm_restricted()
+                runtime.at_log.append("[mc-dspm] FTM re-armed successfully.")
+            else:
+                runtime.at_log.append("[mc-dspm] FTM re-arm did not confirm; will retry on next restricted response.")
+        return ok
+    except Exception as e:
+        async with runtime.lock:
+            runtime.at_log.append(f"[mc-dspm] FTM re-arm failed: {e!r}")
+        return False
+    finally:
+        _ftm_rearming = False
 
 
 async def _broadcast() -> None:
@@ -325,6 +386,7 @@ async def _await_qrxftm_consumed(channel: str, timeout_sec: float) -> bool:
         async with runtime.lock:
             head = runtime.qrxftm_expect[0] if runtime.qrxftm_expect else None
             if head != channel:
+                runtime.note_qrxftm_step_ok()
                 return True
         await asyncio.sleep(0.02)
     # Timed out: drop one pending expect if it is still this channel so later URCs don't get mis-attributed.
@@ -332,6 +394,7 @@ async def _await_qrxftm_consumed(channel: str, timeout_sec: float) -> bool:
         head = runtime.qrxftm_expect[0] if runtime.qrxftm_expect else None
         if head == channel:
             runtime.qrxftm_expect.popleft()
+            runtime.note_qrxftm_timeout()
             runtime.at_log.append(
                 f"[mc-dspm] +QRXFTM timeout for {channel}; dropped one pending expect to avoid cross-channel bleed."
             )
@@ -355,6 +418,7 @@ async def _channel_measurement_loop() -> None:
                 continue
             # No modem connected and not in mock mode: back off to avoid busy-spinning.
             if not settings.mock_modem and sw.ser is None:
+                await _ensure_serial_connected()
                 await asyncio.sleep(2.0)
                 continue
             any_sent = False
@@ -369,10 +433,34 @@ async def _channel_measurement_loop() -> None:
                     any_sent = True
                     # On real modem: wait for +QRXFTM to be consumed (or timeout) before advancing.
                     if (not settings.mock_modem) and sw.ser is not None:
-                        await _await_qrxftm_consumed(
+                        got_consumed = await _await_qrxftm_consumed(
                             p,
                             timeout_sec=max(0.2, float(settings.scan_channel_delay_sec or 0.0) + 0.8),
                         )
+                        if not got_consumed:
+                            ftm_restricted = False
+                            async with runtime.lock:
+                                recent = list(runtime.serial_rx_log)[-8:]
+                                ftm_restricted = any(_line_indicates_ftm_restricted(x) for x in recent)
+                                if ftm_restricted:
+                                    runtime.note_ftm_restricted()
+                                    runtime.at_log.append(
+                                        "[mc-dspm] Modem reported FTM restriction; attempting QRFTESTMODE re-arm."
+                                    )
+                            if ftm_restricted:
+                                await _try_rearm_ftm("restricted to FTM")
+                        else:
+                            # Restricted-to-FTM can consume the expected slot quickly (no timeout), so
+                            # also trigger re-arm from the streak counter set in runtime RX processing.
+                            need_rearm = False
+                            async with runtime.lock:
+                                if runtime.ftm_restricted_streak > 0:
+                                    need_rearm = True
+                                    runtime.at_log.append(
+                                        "[mc-dspm] FTM restriction detected on modem response; attempting QRFTESTMODE re-arm."
+                                    )
+                            if need_rearm:
+                                await _try_rearm_ftm("restricted to FTM")
                         # Optional extra pacing after consumption (keeps modem calm on some FW).
                         if settings.scan_channel_delay_sec > 0:
                             await asyncio.sleep(settings.scan_channel_delay_sec)
@@ -399,18 +487,15 @@ async def _startup_rf() -> None:
 
 
 def _use_synthetic_rssi() -> bool:
-    """Simulated RSSI only when mock mode or serial port did not open."""
-    return (
-        settings.mock_modem
-        or serial_worker is None
-        or serial_worker.ser is None
-    )
+    """Simulated RSSI only in explicit mock mode (PT_MOCK_MODEM=true)."""
+    return settings.mock_modem
 
 
 async def _tick_loop() -> None:
     interval = max(0.05, 1.0 / settings.ws_push_hz)
     while True:
         await asyncio.sleep(interval)
+        await _ensure_serial_connected()
         async with runtime.lock:
             if settings.modem_qrxftm_scan:
                 runtime.clear_scan_led_synthetic()
@@ -489,7 +574,7 @@ async def lifespan(app: FastAPI):
             )
         else:
             rx_note = (
-                " Serial open failed — UI uses synthetic RSSI until the port is available."
+                " Serial open failed — no live modem samples until the port is available."
             )
         runtime.at_log.append(
             f"[mc-dspm] Ready — port {settings.serial_port} @ {settings.baudrate} baud, "
@@ -574,7 +659,7 @@ async def get_dashboard_config() -> dict[str, Any]:
 @app.post("/api/config/dashboard")
 async def post_dashboard_config(body: DashboardConfigBody) -> dict[str, Any]:
     global _mno_common_preset
-    prev = (settings.serial_port, settings.baudrate, settings.mock_modem)
+    prev = (settings.serial_port, settings.baudrate)
     async with runtime.lock:
         _apply_dashboard_settings(body, runtime)
         applied_mno_runtime = False
@@ -592,7 +677,7 @@ async def post_dashboard_config(body: DashboardConfigBody) -> dict[str, Any]:
             for p in channel_prefixes():
                 runtime.channels[p].sync_atten_from_band_ec25()
     save_dashboard_config_file(settings, runtime)
-    conn_changed = prev != (settings.serial_port, settings.baudrate, settings.mock_modem)
+    conn_changed = prev != (settings.serial_port, settings.baudrate)
     if conn_changed:
         await _reconnect_serial()
     await _broadcast()

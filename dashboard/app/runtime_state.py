@@ -67,6 +67,7 @@ class ChannelRuntime:
     chart_rssi_avg: deque[tuple[float, float]] = field(default_factory=lambda: deque(maxlen=3600))
     chart_rssi_sd: deque[tuple[float, float]] = field(default_factory=lambda: deque(maxlen=3600))
     rssi_history: deque[float] = field(default_factory=lambda: deque(maxlen=64))
+    last_sample_at: float | None = None
 
     def rolling_mean_sd(self, window: int = 5) -> tuple[float, float]:
         if not self.rssi_history:
@@ -89,6 +90,7 @@ class ChannelRuntime:
         self.rssi_history.clear()
         self.measurement_count = 0
         self.rssi_dbm = -80.0
+        self.last_sample_at = None
 
     def record_rssi_sample(self, rssi_dbm: float) -> None:
         """Apply one modem measurement (+QRXFTM second field, dBm); stored RSSI = raw + atten_db (positive atten)."""
@@ -97,10 +99,16 @@ class ChannelRuntime:
         self.rssi_dbm = float(rssi_dbm) + self.atten_db
         self.rssi_history.append(self.rssi_dbm)
         t = _now()
+        self.last_sample_at = t
         avg, sd = self.rolling_mean_sd(_rssi_smooth_window())
         self.chart_rssi_avg.append((t, avg))
         self.chart_rssi_sd.append((t, sd))
         self.measurement_count += 1
+
+    def is_stale(self, max_age_sec: float) -> bool:
+        if self.last_sample_at is None:
+            return True
+        return (_now() - self.last_sample_at) > max(0.2, float(max_age_sec))
 
     def tick_mock(self) -> None:
         if not self.channel_enabled:
@@ -150,6 +158,9 @@ class AppRuntime:
     modem_hw: str | None = None
     modem_fw: str | None = None
     modem_ident_at: float | None = None
+    last_modem_rx_at: float | None = None
+    qrxftm_timeout_streak: int = 0
+    ftm_restricted_streak: int = 0
     # One entry per AT+QRXFTM sent per channel step; +QRXFTM lines consume in order.
     qrxftm_expect: deque[str] = field(default_factory=lambda: deque(maxlen=256))
     # Composit Power (all CC): linear sum of mW from enabled carriers' RSSI (dBm).
@@ -214,6 +225,8 @@ class AppRuntime:
         """Handle a single RX line under lock. Maps +QRXFTM to the channel awaiting a response."""
         up = text.upper()
         if kind == "ERR" and self.qrxftm_expect:
+            if "RESTRICTED" in up and "FTM" in up:
+                self.note_ftm_restricted()
             self.qrxftm_expect.popleft()
             return
         if kind != "URC" or "+QRXFTM" not in up:
@@ -226,14 +239,47 @@ class AppRuntime:
             return
         ch_obj = self.channels[ch]
         if ch_obj.channel_enabled:
+            # Any valid +QRXFTM sample means modem is in working RF test context.
+            self.clear_ftm_restricted()
             ch_obj.record_rssi_sample(rssi)
+
+    def note_modem_rx(self) -> None:
+        self.last_modem_rx_at = _now()
+
+    def note_qrxftm_step_ok(self) -> None:
+        self.qrxftm_timeout_streak = 0
+
+    def note_qrxftm_timeout(self) -> None:
+        self.qrxftm_timeout_streak += 1
+
+    def note_ftm_restricted(self) -> None:
+        self.ftm_restricted_streak += 1
+
+    def clear_ftm_restricted(self) -> None:
+        self.ftm_restricted_streak = 0
+
+    def modem_health(self) -> tuple[str, str]:
+        if settings.mock_modem:
+            return "ok", "MOCK modem"
+        age = None if self.last_modem_rx_at is None else (_now() - self.last_modem_rx_at)
+        if self.qrxftm_timeout_streak >= int(settings.modem_offline_timeout_streak):
+            return "offline", "No modem response (AT timeout streak)"
+        if age is not None and age >= float(settings.modem_offline_sec):
+            return "offline", f"No serial RX for {int(age)}s"
+        if self.qrxftm_timeout_streak >= int(settings.modem_degraded_timeout_streak):
+            return "degraded", "Intermittent modem response (timeouts)"
+        if age is None:
+            return "degraded", "Waiting for modem RX"
+        if age >= float(settings.modem_degraded_sec):
+            return "degraded", f"RX gap {age:.1f}s"
+        return "ok", "Receiving modem responses"
 
     def update_composite(self) -> None:
         t = _now()
         carriers: list[float] = []
         for p in channel_prefixes():
             ch = self.channels[p]
-            if ch.channel_enabled:
+            if ch.channel_enabled and not ch.is_stale(settings.channel_stale_sec):
                 carriers.append(ch.rssi_dbm)
         if not carriers:
             self.composite_dbm = None
@@ -315,7 +361,9 @@ class AppRuntime:
                     "rssi_sd": None,
                     "chart_rssi_avg": [],
                     "chart_rssi_sd": [],
+                    "stale": False,
                 }
+            stale = ch.is_stale(settings.channel_stale_sec)
             avg, sd = ch.rolling_mean_sd(_rssi_smooth_window())
             return {
                 "channel_enabled": ch.channel_enabled,
@@ -325,11 +373,12 @@ class AppRuntime:
                 "mno": ch.mno,
                 "atten_db": ch.atten_db,
                 "measurement_count": ch.measurement_count,
-                "rssi_dbm": _round_dbm_half(ch.rssi_dbm),
-                "rssi_avg": _round_dbm_half(avg),
-                "rssi_sd": _round_dbm_half(sd),
+                "rssi_dbm": None if stale else _round_dbm_half(ch.rssi_dbm),
+                "rssi_avg": None if stale else _round_dbm_half(avg),
+                "rssi_sd": None if stale else _round_dbm_half(sd),
                 "chart_rssi_avg": _round_dbm_series(list(ch.chart_rssi_avg)[-400:]),
                 "chart_rssi_sd": _round_dbm_series(list(ch.chart_rssi_sd)[-400:]),
+                "stale": stale,
             }
 
         comp: dict[str, Any] = {
@@ -374,5 +423,11 @@ class AppRuntime:
             "hw": self.modem_hw,
             "fw": self.modem_fw,
             "identified": self.modem_ident_at,
+            "last_rx_at": self.last_modem_rx_at,
+            "timeout_streak": self.qrxftm_timeout_streak,
+            "ftm_restricted_streak": self.ftm_restricted_streak,
         }
+        state, status = self.modem_health()
+        out["modem"]["state"] = state
+        out["modem"]["status"] = status
         return out

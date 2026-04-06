@@ -13,7 +13,7 @@ There is also **Node-RED** related material (`flows.json`, `package.json`, `node
 ## Prerequisites
 
 - **Python 3.10+** (3.11+ recommended)
-- A **serial port** and Quectel modem when not using mock mode (Windows: e.g. `COM40`)
+- A **serial port** and Quectel modem when not using mock mode (Windows: e.g. `COM60`)
 
 ### Tested hardware / drivers
 
@@ -68,7 +68,7 @@ The reference bench setup uses a **large fixed RF power attenuator** between the
 
 | Variable | Default | Notes |
 |----------|---------|--------|
-| `PT_SERIAL_PORT` | `COM40` | Serial device (e.g. `/dev/ttyUSB0` on Linux) |
+| `PT_SERIAL_PORT` | `COM60` | Serial device (e.g. `/dev/ttyUSB0` on Linux) |
 | `PT_BAUDRATE` | `115200` | Modem baud rate |
 | `PT_MOCK_MODEM` | `false` | Set `true` for UI work without hardware (synthetic RSSI, fake OK on TX) |
 | `PT_WS_PUSH_HZ` | `4` | WebSocket snapshot cadence (Hz) |
@@ -81,13 +81,14 @@ The reference bench setup uses a **large fixed RF power attenuator** between the
 | `PT_MODEM_QRXFTM_SCAN` | `true` | Continuous round-robin `AT+QRXFTM` per enabled channel |
 | `PT_FLOWS_JSON` | *(auto)* | Override path to `flows.json` if needed |
 
-Environment values are merged at startup; **`dashboard/dashboard_config.json`** (written from the **Settings** tab) overrides connection, timing, smoothing, gauge scale, **MNO Common** preset, and **band → attenuation** table for that install and is **reloaded on every app restart**.
+Environment values are merged at startup; **`dashboard/dashboard_config.json`** (written from the **Settings** tab) overrides connection and UI/runtime tuning for that install and is **reloaded on every app restart**.  
+`PT_MOCK_MODEM` is **environment/CLI only** (not persisted by the dashboard settings file).
 
 ### Settings tab (`dashboard_config.json`)
 
 Open **Settings** in the UI to configure:
 
-- **Serial:** COM port, baud, mock mode (changing port/baud/mock **reopens** the serial port).
+- **Serial:** COM port and baud (changing either **reopens** the serial port).
 - **Timing:** scan delays, WebSocket push rate.
 - **Smoothing:** per-channel RSSI window and composite power window (samples).
 - **Gauge scale:** min/max dBm and optional segment breakpoints for the bar gauges (same scale as charts use for Y-axis alignment).
@@ -98,7 +99,7 @@ Use **Save** to write `dashboard_config.json`. **Pre-load MNO Common** on the da
 
 **UX notes:** Turning a **channel off** clears that channel’s gauges and charts until it is enabled again. **Composite** power combines linear power from **enabled** channels only.
 
-**Scan LEDs:** Beside each **Channel n** title, a small round indicator shows scan activity. **Black** = idle for that channel; **bright green** = active step—either the channel visited in the `AT+QRXFTM` round-robin or (on hardware) the channel at the front of the pending `+QRXFTM` queue. If **`PT_MODEM_QRXFTM_SCAN=false`** but the app uses **synthetic RSSI** (mock modem or serial not open), the green highlight rotates through **enabled** channels on the UI tick. Live state is in the WebSocket snapshot under `controls.scan_active_channel` (and `controls.modem_qrxftm_scan` mirrors the env flag).
+**Scan LEDs:** Beside each **Channel n** title, a small round indicator shows scan activity. **Black** = idle for that channel; **bright green** = active step—either the channel visited in the `AT+QRXFTM` round-robin or (on hardware) the channel at the front of the pending `+QRXFTM` queue. If **`PT_MODEM_QRXFTM_SCAN=false`** and **`PT_MOCK_MODEM=true`**, the green highlight rotates through **enabled** channels on the UI tick. Live state is in the WebSocket snapshot under `controls.scan_active_channel` (and `controls.modem_qrxftm_scan` mirrors the env flag).
 
 ## Run the dashboard
 

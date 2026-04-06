@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Multi-Channel LTE (4G) Downlink Signal Power Monitor — v1.0 beta</title>
-  <link rel="stylesheet" href="/static/app.css?v=6"/>
+  <link rel="stylesheet" href="/static/app.css?v=7"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -16,6 +16,7 @@
     <div class="meta">
       <span>Serial: <span id="hdr-serial">{{ settings.serial_port }} @ {{ settings.baudrate }}</span></span>
       <span id="hdr-mock" class="mock">{% if settings.mock_modem %}MOCK modem{% else %}HW modem{% endif %}</span>
+      <span id="hdr-modem-state" class="modem-state modem-state--degraded">MODEM …</span>
       <span>Modem: <span id="hdr-modem-hw">—</span></span>
       <span>FW: <span id="hdr-modem-fw">—</span></span>
     </div>
@@ -30,7 +31,7 @@
   <div id="panel-settings" class="tab-panel is-hidden" role="tabpanel">
     {% block settings %}{% endblock %}
   </div>
-  <script src="/static/app.js?v=6"></script>
+  <script src="/static/app.js?v=7"></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

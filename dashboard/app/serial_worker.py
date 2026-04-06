@@ -17,6 +17,8 @@ def classify_modem_line(text: str) -> str:
     up = t.upper()
     if up == "ERROR" or up == "FAIL":
         return "ERR"
+    if up.startswith("ERROR"):
+        return "ERR"
     if "CME ERROR" in up or "CMS ERROR" in up:
         return "ERR"
     if "NO CARRIER" in up or "OPERATION NOT ALLOWED" in up:
@@ -108,6 +110,7 @@ class SerialWorker:
             async with self.runtime.lock:
                 self.runtime.at_log.append(line)
                 self.runtime.serial_rx_log.append(text)
+                self.runtime.note_modem_rx()
                 self.runtime.process_modem_measurement_line(text, kind)
             if self.on_line:
                 self.on_line(text)
