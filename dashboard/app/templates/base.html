@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Multi-Channel LTE (4G) Downlink Signal Power Monitor — v1.0 beta</title>
-  <link rel="stylesheet" href="/static/app.css?v=7"/>
+  <link rel="stylesheet" href="/static/app.css?v=8"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -23,15 +23,30 @@
   </header>
   <nav class="app-tabs" role="tablist" aria-label="Main">
     <button type="button" class="app-tab app-tab--active" role="tab" aria-selected="true" data-tab="dashboard">Dashboard</button>
+    <button type="button" class="app-tab" role="tab" aria-selected="false" data-tab="lte-viz">LTE Visualizer</button>
     <button type="button" class="app-tab" role="tab" aria-selected="false" data-tab="settings">Settings</button>
   </nav>
   <div id="panel-dashboard" class="tab-panel tab-panel--active" role="tabpanel">
     <main>{% block main %}{% endblock %}</main>
   </div>
+  <div id="panel-lte-viz" class="tab-panel is-hidden" role="tabpanel">
+    <section class="lte-viz-wrap">
+      <nav class="lte-viz-tabs" role="tablist" aria-label="LTE Visualizer Bands">
+        <button type="button" class="lte-viz-tab is-active" data-viz-src="/lte-viz/index-band1.html" aria-selected="true">Band 1</button>
+        <button type="button" class="lte-viz-tab" data-viz-src="/lte-viz/index-band3.html" aria-selected="false">Band 3</button>
+        <button type="button" class="lte-viz-tab" data-viz-src="/lte-viz/index-band7.html" aria-selected="false">Band 7</button>
+        <button type="button" class="lte-viz-tab" data-viz-src="/lte-viz/index-band8.html" aria-selected="false">Band 8</button>
+        <button type="button" class="lte-viz-tab" data-viz-src="/lte-viz/index-band20.html" aria-selected="false">Band 20</button>
+        <button type="button" class="lte-viz-tab" data-viz-src="/lte-viz/index-band28.html" aria-selected="false">Band 28</button>
+        <button type="button" class="lte-viz-tab" data-viz-src="/lte-viz/index-band40.html" aria-selected="false">Band 40</button>
+      </nav>
+      <iframe id="lte-viz-frame" class="lte-viz-frame" src="/lte-viz/index-band1.html" title="LTE band visualizer"></iframe>
+    </section>
+  </div>
   <div id="panel-settings" class="tab-panel is-hidden" role="tabpanel">
     {% block settings %}{% endblock %}
   </div>
-  <script src="/static/app.js?v=7"></script>
+  <script src="/static/app.js?v=8"></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

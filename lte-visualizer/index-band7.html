@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LTE Band 7 Visualizer</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="page-header">
+    <h1>LTE Channel Visualizer - Band 7 (L2600)</h1>
+    <p>
+      LTE Band 7 view with separate <strong>DL</strong> and <strong>UL</strong> charts
+      and operator carrier overlays.
+    </p>
+  </header>
+
+  <section class="legend">
+    <span class="chip chip-dl">DL</span>
+    <span class="chip chip-ul">UL</span>
+    <span class="chip chip-note">Band 7 span: DL 2620-2690 MHz, UL 2500-2570 MHz</span>
+  </section>
+
+  <main class="viz-wrap">
+    <svg id="viz" role="img" aria-label="LTE Band 7 frequency visualizer"></svg>
+  </main>
+
+  <script src="./app-band7.js"></script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LTE Band 40 Visualizer</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="page-header">
+    <h1>LTE Channel Visualizer - Band 40 (L2300)</h1>
+    <p>
+      LTE Band 40 view with separate <strong>DL</strong> and <strong>UL</strong> charts
+      (TDD-style same center EARFCN positions on both charts), showing VMO2 carriers.
+    </p>
+  </header>
+
+  <section class="legend">
+    <span class="chip chip-dl">DL</span>
+    <span class="chip chip-ul">UL</span>
+    <span class="chip chip-note">Band 40 span: 2300-2400 MHz, EARFCN 38650-39649</span>
+  </section>
+
+  <main class="viz-wrap">
+    <svg id="viz" role="img" aria-label="LTE Band 40 frequency visualizer"></svg>
+  </main>
+
+  <script src="./app-band40.js"></script>
+</body>
+</html>

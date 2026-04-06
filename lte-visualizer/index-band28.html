@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LTE Band 28 Visualizer</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="page-header">
+    <h1>LTE Channel Visualizer - UK Band 28 (L700)</h1>
+    <p>
+      UK LTE Band 28 view with separate <strong>DL</strong> and <strong>UL</strong> charts,
+      operator carriers, and center labels in EARFCN + MHz.
+    </p>
+  </header>
+
+  <section class="legend">
+    <span class="chip chip-dl">DL</span>
+    <span class="chip chip-ul">UL</span>
+    <span class="chip chip-note">Band 28 span: DL 758-803 MHz, UL 703-748 MHz</span>
+  </section>
+
+  <main class="viz-wrap">
+    <svg id="viz" role="img" aria-label="LTE Band 28 frequency visualizer"></svg>
+  </main>
+
+  <script src="./app-band28.js"></script>
+</body>
+</html>

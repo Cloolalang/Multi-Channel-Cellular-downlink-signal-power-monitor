@@ -116,6 +116,45 @@ body {
   display: none;
 }
 
+.lte-viz-wrap {
+  padding: 1rem;
+}
+
+.lte-viz-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0 0 0.7rem;
+}
+
+.lte-viz-tab {
+  background: #111723;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.42rem 0.75rem;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.lte-viz-tab:hover {
+  filter: brightness(1.08);
+}
+
+.lte-viz-tab.is-active {
+  background: #1e2e4a;
+  border-color: #4b6fa8;
+}
+
+.lte-viz-frame {
+  width: 100%;
+  min-height: 78vh;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #0d0d0d;
+}
+
 .settings-wrap {
   padding: 1rem;
   max-width: 40rem;

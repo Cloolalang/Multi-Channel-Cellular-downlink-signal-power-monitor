@@ -46,6 +46,7 @@ from app.settings import settings
 
 
 BASE_DIR = Path(__file__).resolve().parent
+PROJECT_DIR = BASE_DIR.parent.parent
 runtime = AppRuntime()
 serial_worker: SerialWorker | None = None
 _reader_task: asyncio.Task | None = None
@@ -591,6 +592,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+app.mount("/lte-viz", StaticFiles(directory=str(PROJECT_DIR / "lte-visualizer")), name="lte-viz")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 

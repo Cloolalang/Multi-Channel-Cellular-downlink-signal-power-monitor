@@ -577,8 +577,9 @@
   (function initTabs() {
     const tabs = document.querySelectorAll(".app-tab");
     const dash = document.getElementById("panel-dashboard");
+    const viz = document.getElementById("panel-lte-viz");
     const sett = document.getElementById("panel-settings");
-    if (!tabs.length || !dash || !sett) return;
+    if (!tabs.length || !dash || !sett || !viz) return;
     tabs.forEach((btn) => {
       btn.addEventListener("click", () => {
         const name = btn.dataset.tab;
@@ -588,10 +589,14 @@
           b.setAttribute("aria-selected", on ? "true" : "false");
         });
         const showDash = name === "dashboard";
+        const showViz = name === "lte-viz";
+        const showSett = name === "settings";
         dash.classList.toggle("is-hidden", !showDash);
         dash.classList.toggle("tab-panel--active", showDash);
-        sett.classList.toggle("is-hidden", showDash);
-        sett.classList.toggle("tab-panel--active", !showDash);
+        viz.classList.toggle("is-hidden", !showViz);
+        viz.classList.toggle("tab-panel--active", showViz);
+        sett.classList.toggle("is-hidden", !showSett);
+        sett.classList.toggle("tab-panel--active", showSett);
         if (name === "settings") {
           fetch("/api/config/dashboard")
             .then((r) => r.json())
@@ -629,6 +634,23 @@
             })
             .catch(() => {});
         }
+      });
+    });
+  })();
+
+  (function initLteVizTabs() {
+    const frame = document.getElementById("lte-viz-frame");
+    const tabs = document.querySelectorAll(".lte-viz-tab");
+    if (!frame || !tabs.length) return;
+    tabs.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const src = btn.dataset.vizSrc;
+        if (src) frame.src = src;
+        tabs.forEach((t) => {
+          const on = t === btn;
+          t.classList.toggle("is-active", on);
+          t.setAttribute("aria-selected", on ? "true" : "false");
+        });
       });
     });
   })();

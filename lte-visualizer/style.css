@@ -1,0 +1,225 @@
+:root {
+  --bg: #0f1115;
+  --panel: #161a22;
+  --text: #e8edf5;
+  --muted: #a8b2c4;
+  --grid: #2b3444;
+  --dl: #3ec1d3;
+  --ul: #a0d468;
+  --sdl: #f6c177;
+  --overlay: #ff6b6b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.page-header,
+.legend,
+.future-controls,
+.notes {
+  margin: 0.9rem 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--grid);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.page-header h1 {
+  margin: 0 0 0.4rem;
+  font-size: 1.35rem;
+}
+
+.page-header p,
+.notes li {
+  color: var(--muted);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--grid);
+  font-size: 0.8rem;
+}
+
+.chip-dl {
+  background: color-mix(in srgb, var(--dl) 25%, transparent);
+}
+
+.chip-ul {
+  background: color-mix(in srgb, var(--ul) 25%, transparent);
+}
+
+.chip-sdl {
+  background: color-mix(in srgb, var(--sdl) 24%, transparent);
+}
+
+.chip-note {
+  color: var(--muted);
+}
+
+.future-controls h2 {
+  margin: 0 0 0.65rem;
+  font-size: 1rem;
+}
+
+.controls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.6rem 0.8rem;
+  align-items: end;
+}
+
+label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+}
+
+input,
+select,
+button {
+  border: 1px solid var(--grid);
+  border-radius: 6px;
+  padding: 0.4rem 0.45rem;
+  color: var(--text);
+  background: #0f131a;
+}
+
+button[disabled],
+select[disabled],
+input[disabled] {
+  opacity: 0.6;
+}
+
+.viz-wrap {
+  margin: 0.9rem 1rem;
+  border: 1px solid var(--grid);
+  border-radius: 8px;
+  background: var(--panel);
+  overflow: auto;
+}
+
+.band-tabs {
+  margin: 0.9rem 1rem 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.band-tab {
+  border: 1px solid var(--grid);
+  border-radius: 7px;
+  background: #111723;
+  color: var(--text);
+  padding: 0.42rem 0.75rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.band-tab:hover {
+  filter: brightness(1.08);
+}
+
+.band-tab.is-active {
+  background: #1e2e4a;
+  border-color: #4b6fa8;
+}
+
+.tab-panels {
+  margin: 0 1rem 1rem;
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.is-active {
+  display: block;
+}
+
+.band-frame {
+  width: 100%;
+  min-height: 760px;
+  border: 1px solid var(--grid);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+#viz {
+  display: block;
+  width: 100%;
+  min-width: 980px;
+}
+
+.axis-line,
+.row-line {
+  stroke: var(--grid);
+  stroke-width: 1;
+}
+
+.tick-line {
+  stroke: #46526a;
+  stroke-width: 1;
+}
+
+.axis-label,
+.tick-label,
+.row-label,
+.bar-label,
+.subtle-label {
+  fill: var(--text);
+  font-size: 12px;
+}
+
+.subtle-label {
+  fill: var(--muted);
+}
+
+.row-label {
+  font-weight: 600;
+}
+
+.bar-dl {
+  fill: var(--dl);
+  fill-opacity: 0.65;
+  stroke: color-mix(in srgb, var(--dl) 80%, #000);
+  stroke-width: 1;
+}
+
+.bar-ul {
+  fill: var(--ul);
+  fill-opacity: 0.6;
+  stroke: color-mix(in srgb, var(--ul) 80%, #000);
+  stroke-width: 1;
+}
+
+.bar-sdl {
+  fill: var(--sdl);
+  fill-opacity: 0.62;
+  stroke: color-mix(in srgb, var(--sdl) 80%, #000);
+  stroke-width: 1;
+}
+
+.overlay-box {
+  fill: var(--overlay);
+  fill-opacity: 0.25;
+  stroke: var(--overlay);
+  stroke-width: 1;
+  stroke-dasharray: 4 2;
+}

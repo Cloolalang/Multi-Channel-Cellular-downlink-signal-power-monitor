@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LTE Carrier Dashboard</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="page-header">
+    <h1>LTE Carrier Dashboard</h1>
+    <p>Tabbed view for all LTE band pages (Band 1, 3, 7, 8, 20, 28, 40).</p>
+  </header>
+
+  <nav class="band-tabs" role="tablist" aria-label="LTE bands">
+    <button type="button" class="band-tab is-active" data-target="tab-band1" role="tab" aria-selected="true">Band 1</button>
+    <button type="button" class="band-tab" data-target="tab-band3" role="tab" aria-selected="false">Band 3</button>
+    <button type="button" class="band-tab" data-target="tab-band7" role="tab" aria-selected="false">Band 7</button>
+    <button type="button" class="band-tab" data-target="tab-band8" role="tab" aria-selected="false">Band 8</button>
+    <button type="button" class="band-tab" data-target="tab-band20" role="tab" aria-selected="false">Band 20</button>
+    <button type="button" class="band-tab" data-target="tab-band28" role="tab" aria-selected="false">Band 28</button>
+    <button type="button" class="band-tab" data-target="tab-band40" role="tab" aria-selected="false">Band 40</button>
+  </nav>
+
+  <section class="tab-panels">
+    <article id="tab-band1" class="tab-panel is-active" role="tabpanel">
+      <iframe class="band-frame" src="./index-band1.html" title="Band 1"></iframe>
+    </article>
+    <article id="tab-band3" class="tab-panel" role="tabpanel">
+      <iframe class="band-frame" src="./index-band3.html" title="Band 3"></iframe>
+    </article>
+    <article id="tab-band7" class="tab-panel" role="tabpanel">
+      <iframe class="band-frame" src="./index-band7.html" title="Band 7"></iframe>
+    </article>
+    <article id="tab-band8" class="tab-panel" role="tabpanel">
+      <iframe class="band-frame" src="./index-band8.html" title="Band 8"></iframe>
+    </article>
+    <article id="tab-band20" class="tab-panel" role="tabpanel">
+      <iframe class="band-frame" src="./index-band20.html" title="Band 20"></iframe>
+    </article>
+    <article id="tab-band28" class="tab-panel" role="tabpanel">
+      <iframe class="band-frame" src="./index-band28.html" title="Band 28"></iframe>
+    </article>
+    <article id="tab-band40" class="tab-panel" role="tabpanel">
+      <iframe class="band-frame" src="./index-band40.html" title="Band 40"></iframe>
+    </article>
+  </section>
+
+  <script>
+    (function () {
+      const tabs = Array.from(document.querySelectorAll(".band-tab"));
+      const panels = Array.from(document.querySelectorAll(".tab-panel"));
+      function activate(targetId) {
+        tabs.forEach((t) => {
+          const on = t.dataset.target === targetId;
+          t.classList.toggle("is-active", on);
+          t.setAttribute("aria-selected", on ? "true" : "false");
+        });
+        panels.forEach((p) => p.classList.toggle("is-active", p.id === targetId));
+      }
+      tabs.forEach((t) => t.addEventListener("click", () => activate(t.dataset.target)));
+    })();
+  </script>
+</body>
+</html>

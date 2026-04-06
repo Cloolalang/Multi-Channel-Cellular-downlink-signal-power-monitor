@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LTE Band 3 Visualizer</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="page-header">
+    <h1>LTE Channel Visualizer - UK Band 3 (L1800)</h1>
+    <p>
+      UK LTE Band 3 view with separate <strong>DL</strong> and <strong>UL</strong> charts,
+      operator carriers, and center labels in EARFCN + MHz.
+    </p>
+  </header>
+
+  <section class="legend">
+    <span class="chip chip-dl">DL</span>
+    <span class="chip chip-ul">UL</span>
+    <span class="chip chip-note">Band 3 span: DL 1805-1880 MHz, UL 1710-1785 MHz</span>
+  </section>
+
+  <main class="viz-wrap">
+    <svg id="viz" role="img" aria-label="LTE Band 3 frequency visualizer"></svg>
+  </main>
+
+  <script src="./app-band3.js"></script>
+</body>
+</html>
