@@ -383,12 +383,11 @@
           return;
         }
         if (el.type === "number") {
+          /* Do not clobber numeric edits while focused — WS updates can reset mid-typing. */
+          if (document.activeElement === el) return;
           if (field === "band_eutra") el.value = String(d.band_eutra);
           if (field === "earfcn") el.value = String(d.earfcn);
-          /* Do not clobber attenuation while focused — WS updates were resetting mid-typing. */
-          if (field === "atten_db" && document.activeElement !== el) {
-            el.value = String(d.atten_db);
-          }
+          if (field === "atten_db") el.value = String(d.atten_db);
         }
       });
       document.querySelectorAll(`.js-gauge[data-channel="${ch}"]`).forEach((el) => {
