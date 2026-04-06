@@ -10,6 +10,7 @@
     dlEarfcn: [3450, 3799],
     ulEarfcn: [21450, 21799]
   };
+  const PAGE_BAND = 8;
 
   const svg = document.getElementById("viz");
   if (!svg) return;
@@ -47,6 +48,8 @@
 
   const overlayLayer = node("g");
   overlayLayer.setAttribute("id", "overlay-layer");
+  const runtimeLayer = node("g");
+  runtimeLayer.setAttribute("id", "runtime-layer");
 
   CHARTS.forEach((chart, i) => drawSingleChart(chart, i));
 
@@ -91,6 +94,7 @@
   });
 
   svg.appendChild(overlayLayer);
+  svg.appendChild(runtimeLayer);
 
   function toX(freqMhz, freqMin, freqMax) {
     const innerW = WIDTH - MARGIN.left - MARGIN.right;
@@ -199,6 +203,7 @@
   }
 
   function drawCarrierSymbol(cfg) {
+    const targetLayer = cfg.targetLayer || overlayLayer;
     const lane = cfg.lane || "DL";
     const chart = chartByLane[lane];
     const layout = chartLayoutByLane[lane];
@@ -233,7 +238,7 @@
     path.setAttribute("stroke-width", "3");
     path.setAttribute("stroke-linejoin", "round");
     path.setAttribute("stroke-linecap", "round");
-    overlayLayer.appendChild(path);
+    targetLayer.appendChild(path);
 
     const cx = x + w / 2;
     const cy = markerY - amplitude * 0.35;
@@ -243,17 +248,116 @@
     rhombus.setAttribute("fill", cfg.markerFill);
     rhombus.setAttribute("stroke", cfg.markerStroke);
     rhombus.setAttribute("stroke-width", "1");
-    overlayLayer.appendChild(rhombus);
+    targetLayer.appendChild(rhombus);
 
     const flatTopY = markerY - amplitude;
     const label = text(cx, flatTopY - 24, cfg.label, "subtle-label");
     label.setAttribute("text-anchor", "middle");
-    overlayLayer.appendChild(label);
+    targetLayer.appendChild(label);
 
     const mhzLabel = text(cx, flatTopY - 10, `Center ${centerFreq.toFixed(1)} MHz`, "subtle-label");
     mhzLabel.setAttribute("text-anchor", "middle");
-    overlayLayer.appendChild(mhzLabel);
+    targetLayer.appendChild(mhzLabel);
   }
+
+  function ulPairOffset() {
+    const dl = chartByLane.DL?.earfcnRange;
+    const ul = chartByLane.UL?.earfcnRange;
+    if (!dl || !ul) return 0;
+    return ul[0] - dl[0];
+  }
+
+  function renderRuntimeChannels(channels) {
+    runtimeLayer.innerHTML = "";
+    const src = channels || {};
+    const palette = [
+      { fill: "#ff7ad9", stroke: "#ffc5ef" },
+      { fill: "#67e8f9", stroke: "#bbf7ff" },
+      { fill: "#facc15", stroke: "#fde68a" },
+      { fill: "#22c55e", stroke: "#86efac" },
+      { fill: "#fb7185", stroke: "#fecdd3" },
+      { fill: "#a78bfa", stroke: "#ddd6fe" },
+      { fill: "#34d399", stroke: "#a7f3d0" },
+    ];
+    const off = ulPairOffset();
+    for (let i = 0; i < 14; i++) {
+      const key = `ch${i}`;
+      const c = src[key];
+      if (!c || !c.channel_enabled) continue;
+      if (Number(c.band_eutra) !== PAGE_BAND) continue;
+      const earfcn = Number(c.earfcn);
+      const bw = Number(c.bw_mhz);
+      if (!Number.isFinite(earfcn) || !Number.isFinite(bw) || bw <= 0) continue;
+      const p = palette[i % palette.length];
+      drawRuntimeRect({
+        lane: "DL",
+        label: `CH${i}`,
+        centerEarfcn: earfcn,
+        bandwidthMhz: bw,
+        lineColor: p.fill,
+        markerFill: p.fill,
+        markerStroke: p.stroke,
+        slot: i,
+      });
+      drawRuntimeRect({
+        lane: "UL",
+        label: `CH${i}`,
+        centerEarfcn: earfcn + off,
+        bandwidthMhz: bw,
+        lineColor: p.fill,
+        markerFill: p.fill,
+        markerStroke: p.stroke,
+        slot: i,
+      });
+    }
+  }
+
+  function drawRuntimeRect(cfg) {
+    const lane = cfg.lane || "DL";
+    const chart = chartByLane[lane];
+    const layout = chartLayoutByLane[lane];
+    if (!chart || !layout) return;
+    const centerEarfcn = Number(cfg.centerEarfcn);
+    const bandwidthMhz = Number(cfg.bandwidthMhz);
+    if (!Number.isFinite(centerEarfcn) || !Number.isFinite(bandwidthMhz) || bandwidthMhz <= 0) return;
+
+    const centerFreq = chartEarfcnToFreq(centerEarfcn, chart);
+    const halfBw = bandwidthMhz / 2;
+    const lo = centerFreq - halfBw;
+    const hi = centerFreq + halfBw;
+    const x0 = toX(lo, chart.freqRange[0], chart.freqRange[1]);
+    const x1 = toX(hi, chart.freqRange[0], chart.freqRange[1]);
+    const x = Math.min(x0, x1);
+    const w = Math.max(8, Math.abs(x1 - x0));
+    const slot = Number.isFinite(Number(cfg.slot)) ? Number(cfg.slot) : 0;
+    const y = layout.barY + 10 + slot * 16;
+    const h = 12;
+
+    const rect = node("rect");
+    rect.setAttribute("x", String(x));
+    rect.setAttribute("y", String(y));
+    rect.setAttribute("width", String(w));
+    rect.setAttribute("height", String(h));
+    rect.setAttribute("rx", "2");
+    rect.setAttribute("fill", cfg.markerFill || "#67e8f9");
+    rect.setAttribute("fill-opacity", "0.55");
+    rect.setAttribute("stroke", cfg.markerStroke || "#bbf7ff");
+    rect.setAttribute("stroke-width", "1");
+    runtimeLayer.appendChild(rect);
+
+    const tx = text(x + w / 2, y + h - 2, cfg.label || "CH", "subtle-label");
+    tx.setAttribute("text-anchor", "middle");
+    tx.setAttribute("fill", "#ffffff");
+    tx.setAttribute("font-size", "10");
+    runtimeLayer.appendChild(tx);
+  }
+
+  window.addEventListener("message", (ev) => {
+    if (ev.origin !== window.location.origin) return;
+    const data = ev.data || {};
+    if (data.type !== "lte-viz-runtime") return;
+    renderRuntimeChannels(data.channels || {});
+  });
 
   function line(x1, y1, x2, y2, cls) {
     const el = node("line");

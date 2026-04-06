@@ -1,5 +1,6 @@
 (function () {
   const charts = {};
+  let lastSnap = null;
 
   function fmtTime(t) {
     const d = new Date(t * 1000);
@@ -314,6 +315,7 @@
   }
 
   function applySnap(snap) {
+    lastSnap = snap;
     if (snap.connection) {
       const line = document.getElementById("hdr-serial");
       if (line) {
@@ -475,6 +477,24 @@
         if (snap.controls.scan_count != null) el.textContent = snap.controls.scan_count;
       });
     }
+    pushLteVizRuntime(snap);
+  }
+
+  function pushLteVizRuntime(snap) {
+    const frame = document.getElementById("lte-viz-frame");
+    if (!frame || !frame.contentWindow || !snap) return;
+    const ch = {};
+    for (let i = 0; i < 14; i++) {
+      const key = `ch${i}`;
+      ch[key] = snap[key] || null;
+    }
+    frame.contentWindow.postMessage(
+      {
+        type: "lte-viz-runtime",
+        channels: ch,
+      },
+      window.location.origin
+    );
   }
 
   function debounce(fn, ms) {
@@ -642,6 +662,9 @@
     const frame = document.getElementById("lte-viz-frame");
     const tabs = document.querySelectorAll(".lte-viz-tab");
     if (!frame || !tabs.length) return;
+    frame.addEventListener("load", () => {
+      if (lastSnap) pushLteVizRuntime(lastSnap);
+    });
     tabs.forEach((btn) => {
       btn.addEventListener("click", () => {
         const src = btn.dataset.vizSrc;
