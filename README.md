@@ -157,4 +157,5 @@ Always treat the **revision dated for your module firmware** as authoritative if
 
 - Explore hosting the dashboard/service on a **Teltonika RUT951** and connecting a **separate EC25** dedicated to factory-test/FTM measurements (to avoid interfering with the router’s primary cellular modem behavior).
 - Add **GSM** capability (in addition to LTE/4G-only scope).
+- Add an **EARFCN band scanner / spectrum view** mode that steps across a selectable EARFCN range, captures RSSI per step, and plots a frequency-domain chart.
 - Add **external calibration correction factors** for **channel bandwidth** (BW-dependent correction).

@@ -68,6 +68,7 @@ class ChannelRuntime:
     chart_rssi_sd: deque[tuple[float, float]] = field(default_factory=lambda: deque(maxlen=3600))
     rssi_history: deque[float] = field(default_factory=lambda: deque(maxlen=64))
     last_sample_at: float | None = None
+    missed_scan_streak: int = 0
 
     def rolling_mean_sd(self, window: int = 5) -> tuple[float, float]:
         if not self.rssi_history:
@@ -91,6 +92,7 @@ class ChannelRuntime:
         self.measurement_count = 0
         self.rssi_dbm = -80.0
         self.last_sample_at = None
+        self.missed_scan_streak = 0
 
     def record_rssi_sample(self, rssi_dbm: float) -> None:
         """Apply one modem measurement (+QRXFTM second field, dBm); stored RSSI = raw + atten_db (positive atten)."""
@@ -104,6 +106,7 @@ class ChannelRuntime:
         self.chart_rssi_avg.append((t, avg))
         self.chart_rssi_sd.append((t, sd))
         self.measurement_count += 1
+        self.missed_scan_streak = 0
 
     def is_stale(self, max_age_sec: float) -> bool:
         if self.last_sample_at is None:
@@ -227,7 +230,8 @@ class AppRuntime:
         if kind == "ERR" and self.qrxftm_expect:
             if "RESTRICTED" in up and "FTM" in up:
                 self.note_ftm_restricted()
-            self.qrxftm_expect.popleft()
+            ch = self.qrxftm_expect.popleft()
+            self.note_channel_scan_miss(ch)
             return
         if kind != "URC" or "+QRXFTM" not in up:
             return
@@ -258,6 +262,18 @@ class AppRuntime:
     def clear_ftm_restricted(self) -> None:
         self.ftm_restricted_streak = 0
 
+    def note_channel_scan_miss(self, channel: str) -> None:
+        ch = self.channels.get(channel)
+        if ch is None:
+            return
+        ch.missed_scan_streak += 1
+
+    def _channel_stale(self, ch: ChannelRuntime) -> bool:
+        misses_needed = max(1, int(settings.channel_stale_misses))
+        if settings.modem_qrxftm_scan and ch.channel_enabled:
+            return ch.missed_scan_streak >= misses_needed
+        return ch.is_stale(settings.channel_stale_sec)
+
     def modem_health(self) -> tuple[str, str]:
         if settings.mock_modem:
             return "ok", "MOCK modem"
@@ -279,7 +295,7 @@ class AppRuntime:
         carriers: list[float] = []
         for p in channel_prefixes():
             ch = self.channels[p]
-            if ch.channel_enabled and not ch.is_stale(settings.channel_stale_sec):
+            if ch.channel_enabled and not self._channel_stale(ch):
                 carriers.append(ch.rssi_dbm)
         if not carriers:
             self.composite_dbm = None
@@ -363,7 +379,7 @@ class AppRuntime:
                     "chart_rssi_sd": [],
                     "stale": False,
                 }
-            stale = ch.is_stale(settings.channel_stale_sec)
+            stale = self._channel_stale(ch)
             avg, sd = ch.rolling_mean_sd(_rssi_smooth_window())
             return {
                 "channel_enabled": ch.channel_enabled,

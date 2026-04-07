@@ -396,6 +396,7 @@ async def _await_qrxftm_consumed(channel: str, timeout_sec: float) -> bool:
         if head == channel:
             runtime.qrxftm_expect.popleft()
             runtime.note_qrxftm_timeout()
+            runtime.note_channel_scan_miss(channel)
             runtime.at_log.append(
                 f"[mc-dspm] +QRXFTM timeout for {channel}; dropped one pending expect to avoid cross-channel bleed."
             )

@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     serial_reconnect_interval_sec: float = 2.0
     # If a channel has no fresh +QRXFTM sample for this long, treat displayed values as stale.
     channel_stale_sec: float = 6.0
+    # With scan on, also treat a channel stale after this many consecutive missed scan attempts.
+    channel_stale_misses: int = 2
     # Modem health thresholds (no serial RX age).
     modem_degraded_sec: float = 4.0
     modem_offline_sec: float = 10.0
