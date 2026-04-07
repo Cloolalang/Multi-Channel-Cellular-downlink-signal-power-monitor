@@ -19,6 +19,8 @@ There is also **Node-RED** related material (`flows.json`, `package.json`, `node
 
 This project has been tested on a **Quectel EC25** modem on **Windows**, using **Waveshare** USB drivers for the USB–serial link. Other Quectel modules and host OSes may work if the serial port enumerates correctly and AT commands behave as expected.
 
+- Tested modem firmware version: **EC25EFAR06A06M4G**.
+
 - **[Waveshare EG25-G mPCIe wiki](https://www.waveshare.com/wiki/EG25-G_mPCIe)** — board/module page and driver notes.
 
 The modem is operated in **factory RF test mode** (Quectel test commands such as `AT+QRFTESTMODE` / `AT+QRXFTM`) **without a SIM card**—downlink power is measured via the test/measurement path, not via normal network registration.

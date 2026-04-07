@@ -177,8 +177,8 @@ async def _reconnect_serial() -> None:
             )
     if not settings.mock_modem and serial_worker.ser is not None:
         await _modem_qrftestmode_prep()
-        asyncio.create_task(_probe_modem_identity())
         _reader_task = asyncio.create_task(serial_worker.reader_loop())
+        asyncio.create_task(_probe_modem_identity())
 
 
 async def _ensure_serial_connected() -> None:
@@ -273,6 +273,9 @@ def _clean_modem_id_lines(lines: list[str]) -> list[str]:
         if not s:
             continue
         up = s.upper()
+        # Modems often echo the command (e.g. "AT+CGMR"); exclude echoes from parsed identity fields.
+        if up == "ATI" or up == "AT+CGMR" or up.startswith("AT+"):
+            continue
         if up in ("OK", "ERROR"):
             continue
         if up.startswith("+CME ERROR") or up.startswith("+CMS ERROR"):
@@ -564,7 +567,9 @@ async def lifespan(app: FastAPI):
     asyncio.create_task(serial_worker.writer_loop())
     if not settings.mock_modem and serial_worker.ser is not None:
         _reader_task = asyncio.create_task(serial_worker.reader_loop())
-    asyncio.create_task(_probe_modem_identity())
+        await _probe_modem_identity()
+    else:
+        asyncio.create_task(_probe_modem_identity())
     asyncio.create_task(_startup_rf())
     asyncio.create_task(_tick_loop())
     async with runtime.lock:
