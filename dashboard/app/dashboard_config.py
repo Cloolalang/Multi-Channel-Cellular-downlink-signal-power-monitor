@@ -48,7 +48,7 @@ def pack_channels_state(runtime: Any) -> dict[str, Any]:
             "channel_enabled": bool(ch.channel_enabled),
             "band_eutra": int(ch.band_eutra),
             "earfcn": int(ch.earfcn),
-            "bw_mhz": int(ch.bw_mhz),
+            "bw_mhz": float(ch.bw_mhz),
             "mno": str(ch.mno),
             "atten_db": float(ch.atten_db),
         }
@@ -75,7 +75,7 @@ def apply_saved_channel_state(runtime: Any, data: dict[str, Any]) -> None:
                 pass
         if "bw_mhz" in d:
             try:
-                ch.bw_mhz = int(d["bw_mhz"])
+                ch.bw_mhz = float(d["bw_mhz"])
             except (TypeError, ValueError):
                 pass
         if "mno" in d and d["mno"] is not None:

@@ -42,7 +42,7 @@ VALID_CHANNEL_PREFIXES = frozenset(channel_prefixes())
 
 # Defaults for settings UI / stored preset when flows have no MNO Common block.
 MNO_DROPDOWN_LABELS: tuple[str, ...] = ("Vodafone", "VMO2", "EE", "H3G")
-BW_MHZ_OPTIONS: tuple[int, ...] = (5, 10, 15, 20)
+BW_MHZ_OPTIONS: tuple[float, ...] = (1.4, 3, 5, 10, 15, 20)
 
 
 @dataclass(frozen=True)
@@ -51,7 +51,7 @@ class MnoCommonPreset:
 
     earfcn: tuple[int | None, ...]
     band_eutra: tuple[int | None, ...]
-    bw_mhz: tuple[int | None, ...]
+    bw_mhz: tuple[float | None, ...]
     mno: tuple[str | None, ...]
 
 
@@ -63,6 +63,18 @@ def _parse_intish(raw: Any) -> int | None:
     except (TypeError, ValueError):
         try:
             return int(float(str(raw).strip()))
+        except (TypeError, ValueError):
+            return None
+
+
+def _parse_floatish(raw: Any) -> float | None:
+    if raw is None:
+        return None
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        try:
+            return float(str(raw).strip())
         except (TypeError, ValueError):
             return None
 
@@ -102,7 +114,7 @@ def parse_mno_common_preset(flows_path: Path) -> MnoCommonPreset | None:
 
     ch_earfcn: list[int | None] = [None] * CHANNEL_COUNT
     ch_band: list[int | None] = [None] * CHANNEL_COUNT
-    ch_bw: list[int | None] = [None] * CHANNEL_COUNT
+    ch_bw: list[float | None] = [None] * CHANNEL_COUNT
     ch_mno: list[str | None] = [None] * CHANNEL_COUNT
 
     for cid in fan:
@@ -126,7 +138,7 @@ def parse_mno_common_preset(flows_path: Path) -> MnoCommonPreset | None:
                 if v is not None:
                     ch_band[band_ids[sid]] = v
             if sid in bw_ids:
-                v = _parse_intish(raw)
+                v = _parse_floatish(raw)
                 if v is not None:
                     ch_bw[bw_ids[sid]] = v
             if sid in mno_ids:
@@ -160,6 +172,18 @@ def _normalize_int_cell(val: Any) -> int | None:
             return None
 
 
+def _normalize_float_cell(val: Any) -> float | None:
+    if val is None or val == "":
+        return None
+    try:
+        return float(val)
+    except (TypeError, ValueError):
+        try:
+            return float(str(val).strip())
+        except (TypeError, ValueError):
+            return None
+
+
 def _list_column(raw: dict[str, Any], key: str) -> list[Any]:
     v = raw.get(key)
     if not isinstance(v, list):
@@ -177,12 +201,12 @@ def mno_preset_from_stored_dict(raw: dict[str, Any] | None) -> MnoCommonPreset |
     mno_l = _list_column(raw, "mno")
     ch_earfcn: list[int | None] = []
     ch_band: list[int | None] = []
-    ch_bw: list[int | None] = []
+    ch_bw: list[float | None] = []
     ch_mno: list[str | None] = []
     for i in range(CHANNEL_COUNT):
         ch_earfcn.append(_normalize_int_cell(ear_l[i]) if i < len(ear_l) else None)
         ch_band.append(_normalize_int_cell(band_l[i]) if i < len(band_l) else None)
-        ch_bw.append(_normalize_int_cell(bw_l[i]) if i < len(bw_l) else None)
+        ch_bw.append(_normalize_float_cell(bw_l[i]) if i < len(bw_l) else None)
         ch_mno.append(_normalize_mno_cell(mno_l[i]) if i < len(mno_l) else None)
     return MnoCommonPreset(
         earfcn=tuple(ch_earfcn),
@@ -249,6 +273,8 @@ def load_phase1_widgets(flows_path: Path) -> list[dict[str, Any]]:
         if node.get("z") != SECTOR1_FLOW:
             continue
         slim = {k: v for k, v in node.items() if k not in ("x", "y", "wires")}
+        if node.get("type") == "ui_dropdown" and node.get("label") == "Bandwidth":
+            slim["options"] = [{"label": f"{bw} MHz", "value": bw} for bw in BW_MHZ_OPTIONS]
         out.append(slim)
     out.sort(key=lambda n: (n.get("group", ""), n.get("order", 0), n.get("id", "")))
     return out

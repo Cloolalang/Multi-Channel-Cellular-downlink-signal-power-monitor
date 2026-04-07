@@ -63,7 +63,7 @@ class ChannelPatch(BaseModel):
     channel_enabled: bool | None = None
     band_eutra: int | None = None
     earfcn: int | None = None
-    bw_mhz: int | None = None
+    bw_mhz: float | None = None
     mno: str | None = None
     atten_db: float | None = None
 
@@ -700,7 +700,7 @@ def _patch_channel(prefix: str, p: ChannelPatch) -> None:
     if p.earfcn is not None:
         ch.earfcn = int(p.earfcn)
     if p.bw_mhz is not None:
-        ch.bw_mhz = int(p.bw_mhz)
+        ch.bw_mhz = float(p.bw_mhz)
     if p.mno is not None:
         ch.mno = p.mno
     if p.atten_db is not None:

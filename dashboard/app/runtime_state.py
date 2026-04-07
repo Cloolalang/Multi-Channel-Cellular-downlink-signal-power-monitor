@@ -59,7 +59,7 @@ class ChannelRuntime:
     channel_enabled: bool = True
     band_eutra: int = 20
     earfcn: int = 6400
-    bw_mhz: int = 10
+    bw_mhz: float = 10.0
     mno: str = "EE"
     atten_db: float = 0.0
     measurement_count: int = 0

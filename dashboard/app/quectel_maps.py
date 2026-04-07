@@ -32,15 +32,26 @@ BAND_EUTRA_TO_QUECTEL: dict[int, int] = {
     71: 27,
 }
 
-BW_MHZ_TO_QUECTEL: dict[int, int] = {5: 2, 10: 3, 15: 4, 20: 5}
+BW_MHZ_TO_QUECTEL: dict[float, int] = {
+    1.4: 0,
+    3.0: 1,
+    5.0: 2,
+    10.0: 3,
+    15.0: 4,
+    20.0: 5,
+}
 
 
 def eutra_band_to_quectel(band: int) -> int | None:
     return BAND_EUTRA_TO_QUECTEL.get(int(band))
 
 
-def bw_mhz_to_quectel(mhz: int) -> int | None:
-    return BW_MHZ_TO_QUECTEL.get(int(mhz))
+def bw_mhz_to_quectel(mhz: float) -> int | None:
+    try:
+        val = round(float(mhz), 1)
+    except (TypeError, ValueError):
+        return None
+    return BW_MHZ_TO_QUECTEL.get(val)
 
 
 def build_qrxftm(

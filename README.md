@@ -94,8 +94,12 @@ Open **Settings** in the UI to configure:
 - **Gauge scale:** min/max dBm and optional segment breakpoints for the bar gauges (same scale as charts use for Y-axis alignment).
 - **Band → external attenuation (dB):** per E-UTRA band map stored as `band_attenuation_db`; overrides built-in EC25 defaults for listed bands.
 - **MNO Common preset:** per-channel band, EARFCN, bandwidth, MNO—stored as `mno_common_preset`; when present, overrides the MNO Common block from `flows.json` for startup and **Pre-load MNO Common**.
+- **Channel bandwidth options:** `1.4`, `3`, `5`, `10`, `15`, `20` MHz in the per-channel dropdowns and in the Settings MNO Common table.
 
 Use **Save** to write `dashboard_config.json`. **Pre-load MNO Common** on the dashboard applies the saved (or flows-derived) preset without restarting.
+
+For `AT+QRXFTM` bandwidth mapping, the app uses Quectel index values:
+`1.4→0`, `3→1`, `5→2`, `10→3`, `15→4`, `20→5`.
 
 **UX notes:** Turning a **channel off** clears that channel’s gauges and charts until it is enabled again. **Composite** power combines linear power from **enabled** channels only.
 

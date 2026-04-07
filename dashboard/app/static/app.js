@@ -152,7 +152,7 @@
       earfcn.push(parseIntOrNull(earEl));
       if (!bwEl || String(bwEl.value).trim() === "") bw_mhz.push(null);
       else {
-        const x = parseInt(String(bwEl.value), 10);
+        const x = parseFloat(String(bwEl.value));
         bw_mhz.push(Number.isFinite(x) ? x : null);
       }
       if (!mnoEl || String(mnoEl.value).trim() === "") mno.push(null);
@@ -515,7 +515,7 @@
 
   function readChannelFieldValue(el, field) {
     if (el.type === "checkbox") return el.checked;
-    if (el.tagName === "SELECT" && field === "bw_mhz") return parseInt(el.value, 10);
+    if (el.tagName === "SELECT" && field === "bw_mhz") return parseFloat(el.value);
     if (el.tagName === "SELECT" && field === "mno") return el.value;
     if (el.type === "number") {
       if (field === "atten_db") {
