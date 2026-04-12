@@ -40,6 +40,7 @@ The reference bench setup uses a **large fixed RF power attenuator** between the
 
    - `flows.json` at the **repository root**
    - `dashboard/` next to it (the app resolves `flows.json` relative to that folder)
+   - if copying via Google Drive/ZIP, keep the full `dashboard/app/` tree (especially `templates/` and `static/`)
 
 2. **Create a virtual environment** (recommended):
 
@@ -65,6 +66,33 @@ The reference bench setup uses a **large fixed RF power attenuator** between the
 
 4. **Optional — environment file**  
    Create `dashboard/.env` if you want to override defaults. All variables use the prefix **`PT_`** (see table below). Pydantic loads `.env` from the **current working directory** when you start the app, so run Uvicorn from `dashboard/` as shown below.
+
+## New PC quick start (Windows)
+
+From a fresh copy of the repository:
+
+```cmd
+cd C:\path\to\Powertest\dashboard
+python -m venv .venv
+.venv\Scripts\activate
+python -m pip install -r requirements.txt
+python -m uvicorn app.main:app --reload
+```
+
+Then open **http://127.0.0.1:8000**.
+
+If you want to force mock mode in `cmd.exe`:
+
+```cmd
+set PT_MOCK_MODEM=true
+python -m uvicorn app.main:app --reload
+```
+
+To clear that variable again in `cmd.exe`:
+
+```cmd
+set PT_MOCK_MODEM=
+```
 
 ## Configuration (`PT_*`)
 
@@ -131,6 +159,62 @@ uvicorn app.main:app --reload
 ```
 
 (PowerShell: `$env:PT_MOCK_MODEM="true"`)
+
+## Troubleshooting (common startup issues)
+
+### `TemplateNotFound: 'index.html'`
+
+Your copy is missing dashboard template files. Ensure these exist:
+
+- `dashboard/app/templates/index.html`
+- `dashboard/app/templates/base.html`
+- `dashboard/app/static/app.js`
+- `dashboard/app/static/app.css`
+
+### `ModuleNotFoundError: No module named 'app.flows_inventory'`
+
+Your `dashboard/app/` copy is incomplete. Re-copy the full `dashboard/app/` folder.
+
+### `No module named uvicorn`
+
+You are running a Python interpreter/environment without project dependencies.
+
+Use the project environment and install requirements:
+
+```cmd
+cd C:\path\to\Powertest\dashboard
+.venv\Scripts\activate
+python -m pip install -r requirements.txt
+python -m uvicorn app.main:app --reload
+```
+
+### Serial open fails with `module 'serial' has no attribute 'Serial'`
+
+This is a Python package conflict (`serial` vs `pyserial`) in the active environment.
+
+```cmd
+python -m pip uninstall -y serial pyserial
+python -m pip install pyserial==3.5
+python -c "import serial; print(serial.__file__); print(hasattr(serial,'Serial'))"
+```
+
+The last value should be `True`.
+
+### Dashboard shows `Modem: MOCK` when hardware is connected
+
+Check all of the following:
+
+- `PT_MOCK_MODEM` is not set to `true` in the current shell.
+- **Settings** uses the real AT port (for EC25 on Windows typically `COM60`, not NMEA/DM ports).
+- Baud is `115200`.
+- No other app (PuTTY, terminal tools) is holding the COM port.
+
+Note: On Windows, serial ports are exclusive. If PuTTY can open the port while the dashboard is running, the dashboard did not open that port.
+
+### `/lte-viz/index-band1.html` returns `404`
+
+This is optional content served from `lte-visualizer/` at repository root.  
+The main dashboard can still run without it.
 
 ## Project layout (short)
 
