@@ -105,8 +105,68 @@
       ? window.__CHANNELS
       : Array.from({ length: 14 }, (_, i) => "ch" + i);
 
+  // LTE EARFCN -> DL MHz (3GPP TS 36.101): F_DL = F_DL_low + 0.1 * (N_DL - N_offs_DL)
+  const LTE_DL_EARFCN_MAP = {
+    1: { fLow: 2110.0, nOffs: 0, nMin: 0, nMax: 599 },
+    2: { fLow: 1930.0, nOffs: 600, nMin: 600, nMax: 1199 },
+    3: { fLow: 1805.0, nOffs: 1200, nMin: 1200, nMax: 1949 },
+    4: { fLow: 2110.0, nOffs: 1950, nMin: 1950, nMax: 2399 },
+    5: { fLow: 869.0, nOffs: 2400, nMin: 2400, nMax: 2649 },
+    7: { fLow: 2620.0, nOffs: 2750, nMin: 2750, nMax: 3449 },
+    8: { fLow: 925.0, nOffs: 3450, nMin: 3450, nMax: 3799 },
+    9: { fLow: 1844.9, nOffs: 3800, nMin: 3800, nMax: 4149 },
+    10: { fLow: 2110.0, nOffs: 4150, nMin: 4150, nMax: 4749 },
+    11: { fLow: 1475.9, nOffs: 4750, nMin: 4750, nMax: 4949 },
+    12: { fLow: 729.0, nOffs: 5010, nMin: 5010, nMax: 5179 },
+    13: { fLow: 746.0, nOffs: 5180, nMin: 5180, nMax: 5279 },
+    14: { fLow: 758.0, nOffs: 5280, nMin: 5280, nMax: 5379 },
+    17: { fLow: 734.0, nOffs: 5730, nMin: 5730, nMax: 5849 },
+    18: { fLow: 860.0, nOffs: 5850, nMin: 5850, nMax: 5999 },
+    19: { fLow: 875.0, nOffs: 6000, nMin: 6000, nMax: 6149 },
+    20: { fLow: 791.0, nOffs: 6150, nMin: 6150, nMax: 6449 },
+    25: { fLow: 1930.0, nOffs: 8040, nMin: 8040, nMax: 8689 },
+    26: { fLow: 859.0, nOffs: 8690, nMin: 8690, nMax: 9039 },
+    28: { fLow: 758.0, nOffs: 9210, nMin: 9210, nMax: 9659 },
+    34: { fLow: 2010.0, nOffs: 36200, nMin: 36200, nMax: 36349 },
+    38: { fLow: 2570.0, nOffs: 37750, nMin: 37750, nMax: 38249 },
+    39: { fLow: 1880.0, nOffs: 38250, nMin: 38250, nMax: 38649 },
+    40: { fLow: 2300.0, nOffs: 38650, nMin: 38650, nMax: 39649 },
+    41: { fLow: 2496.0, nOffs: 39650, nMin: 39650, nMax: 41589 },
+    66: { fLow: 2110.0, nOffs: 66436, nMin: 66436, nMax: 67335 },
+    71: { fLow: 617.0, nOffs: 68586, nMin: 68586, nMax: 68935 },
+  };
+
   function channelCount() {
     return CHANNEL_KEYS.length;
+  }
+
+  function lteDlFreqMhzFromBandEarfcn(band, earfcn) {
+    const b = parseInt(String(band), 10);
+    const n = parseInt(String(earfcn), 10);
+    if (!Number.isFinite(b) || !Number.isFinite(n)) return null;
+    const row = LTE_DL_EARFCN_MAP[b];
+    if (!row) return null;
+    if (n < row.nMin || n > row.nMax) return null;
+    const f = row.fLow + 0.1 * (n - row.nOffs);
+    return Number.isFinite(f) ? f : null;
+  }
+
+  function updateChannelCentreFreqDisplay(channel) {
+    if (!channel) return;
+    const host = document.querySelector(`.js-centre-freq[data-channel="${channel}"]`);
+    if (!host) return;
+    const bandEl = document.querySelector(`.js-ch[data-channel="${channel}"][data-field="band_eutra"]`);
+    const earEl = document.querySelector(`.js-ch[data-channel="${channel}"][data-field="earfcn"]`);
+    if (!bandEl || !earEl) {
+      host.textContent = "Centre frequency: — MHz";
+      return;
+    }
+    const f = lteDlFreqMhzFromBandEarfcn(bandEl.value, earEl.value);
+    host.textContent = f == null ? "Centre frequency: — MHz" : `Centre frequency: ${f.toFixed(1)} MHz`;
+  }
+
+  function updateAllCentreFreqDisplays() {
+    CHANNEL_KEYS.forEach((ch) => updateChannelCentreFreqDisplay(ch));
   }
 
   function applyMnoPresetToForm(p, rootEl) {
@@ -421,6 +481,7 @@
           if (field === "atten_db") el.value = String(d.atten_db);
         }
       });
+      updateChannelCentreFreqDisplay(ch);
       document.querySelectorAll(`.js-gauge[data-channel="${ch}"]`).forEach((el) => {
         const m = el.dataset.metric;
         let v = d.rssi_dbm;
@@ -577,6 +638,9 @@
     const ch = el.dataset.channel;
     const field = el.dataset.field;
     if (field === "mno") return;
+    if (field === "earfcn" || field === "band_eutra") {
+      updateChannelCentreFreqDisplay(ch);
+    }
     const val = readChannelFieldValue(el, field);
     if (field === "atten_db" && val === null) return;
     patch(ch, { [field]: val });
@@ -590,6 +654,12 @@
 
   document.addEventListener("input", (e) => {
     const el = e.target;
+    if (
+      el.classList.contains("js-ch") &&
+      (el.dataset.field === "earfcn" || el.dataset.field === "band_eutra")
+    ) {
+      updateChannelCentreFreqDisplay(el.dataset.channel);
+    }
     if (!el.classList.contains("js-ch") || el.dataset.field !== "atten_db") return;
     const s = String(el.value).trim();
     if (s === "" || s === "-" || s === "." || s === "-.") return;
@@ -624,6 +694,7 @@
   document.querySelectorAll(".chart-canvas").forEach((canvas) => ensureChart(canvas));
 
   if (window.__SNAP) applySnap(window.__SNAP);
+  updateAllCentreFreqDisplays();
 
   (function initTabs() {
     const tabs = document.querySelectorAll(".app-tab");

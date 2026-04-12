@@ -483,15 +483,19 @@ async def _channel_measurement_loop() -> None:
                 await asyncio.sleep(2.0)
                 continue
             any_sent = False
+            enabled_channels_in_round = 0
+            sent_channels_in_round = 0
             for p in channel_prefixes():
                 async with runtime.lock:
                     if not runtime.channels[p].channel_enabled:
                         continue
+                    enabled_channels_in_round += 1
                     runtime.scan_active_channel = p
                 await _broadcast()
                 ok, _ = await _enqueue_qrxftm(p, f"scan {p}")
                 if ok:
                     any_sent = True
+                    sent_channels_in_round += 1
                     # On real modem: wait for +QRXFTM to be consumed (or timeout) before advancing.
                     if (not settings.mock_modem) and sw.ser is not None:
                         got_consumed = await _await_qrxftm_consumed(
@@ -527,7 +531,9 @@ async def _channel_measurement_loop() -> None:
                             await asyncio.sleep(settings.scan_channel_delay_sec)
             async with runtime.lock:
                 runtime.scan_active_channel = None
-                runtime.scan_count += 1
+                # Count only full scan rounds across enabled channels, not per step.
+                if enabled_channels_in_round > 0 and sent_channels_in_round == enabled_channels_in_round:
+                    runtime.scan_count += 1
             await _broadcast()
             if any_sent:
                 await asyncio.sleep(max(0.0, settings.scan_round_delay_sec))

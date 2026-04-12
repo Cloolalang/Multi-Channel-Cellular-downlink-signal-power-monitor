@@ -1,4 +1,4 @@
-# LTE Visualizer
+# Bands & Channels visualiser
 
 Standalone HTML LTE channel visualization tool.
 

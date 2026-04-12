@@ -98,6 +98,7 @@
         </select>
       {% elif w.label == "DL EARFCN" %}
         <input type="number" class="js-ch" data-channel="{{ prefix }}" data-field="earfcn" value="{{ sec.earfcn }}"/>
+        <span class="control-hint js-centre-freq" data-channel="{{ prefix }}">Centre frequency: — MHz</span>
       {% elif 'Attenuation' in w.label or 'attenuation' in w.label %}
         <input type="number" inputmode="decimal" step="any" min="0" class="js-ch" data-channel="{{ prefix }}" data-field="atten_db" value="{{ sec.atten_db }}"/>
       {% else %}
