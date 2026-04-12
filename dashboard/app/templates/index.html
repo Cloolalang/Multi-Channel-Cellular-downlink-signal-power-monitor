@@ -114,11 +114,7 @@
           {% endfor %}
         </select>
       {% elif w.label == "MNO" %}
-        <select class="js-ch" data-channel="{{ prefix }}" data-field="mno">
-          {% for o in w.options %}
-            <option value="{{ o.value }}" {% if sec.mno == o.value %}selected{% endif %}>{{ o.label }}</option>
-          {% endfor %}
-        </select>
+        <input type="text" class="js-ch" data-channel="{{ prefix }}" data-field="mno" value="{{ sec.mno }}" readonly/>
       {% endif %}
     </label>
   {% elif w.type == "ui_gauge" %}
@@ -382,6 +378,10 @@
               {% endfor %}
             </tbody>
           </table>
+        </div>
+        <div class="settings-actions">
+          <button type="button" class="btn-control" id="js-mno-preset-save">Save MNO preset</button>
+          <span id="js-mno-preset-status" class="settings-save-status" aria-live="polite"></span>
         </div>
       </fieldset>
       <div class="settings-actions">

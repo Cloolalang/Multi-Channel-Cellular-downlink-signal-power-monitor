@@ -128,6 +128,54 @@ def _snapshot() -> dict[str, Any]:
     return snap
 
 
+def _mno_form_from_runtime() -> dict[str, list[Any]]:
+    """Build MNO Common form payload from current runtime channel values."""
+    keys = channel_prefixes()
+    return {
+        "band_eutra": [int(runtime.channels[k].band_eutra) for k in keys],
+        "earfcn": [int(runtime.channels[k].earfcn) for k in keys],
+        "bw_mhz": [float(runtime.channels[k].bw_mhz) for k in keys],
+        "mno": [str(runtime.channels[k].mno) for k in keys],
+    }
+
+
+def _coalesce_mno_form_with_runtime(
+    form: dict[str, Any],
+    rt: AppRuntime,
+) -> dict[str, list[Any]]:
+    """Fill blank MNO preset cells from runtime so save never drops values."""
+    keys = channel_prefixes()
+    out: dict[str, list[Any]] = {
+        "band_eutra": list(form.get("band_eutra") or []),
+        "earfcn": list(form.get("earfcn") or []),
+        "bw_mhz": list(form.get("bw_mhz") or []),
+        "mno": list(form.get("mno") or []),
+    }
+    for i, key in enumerate(keys):
+        ch = rt.channels[key]
+        if i >= len(out["band_eutra"]) or out["band_eutra"][i] is None:
+            if i >= len(out["band_eutra"]):
+                out["band_eutra"].append(int(ch.band_eutra))
+            else:
+                out["band_eutra"][i] = int(ch.band_eutra)
+        if i >= len(out["earfcn"]) or out["earfcn"][i] is None:
+            if i >= len(out["earfcn"]):
+                out["earfcn"].append(int(ch.earfcn))
+            else:
+                out["earfcn"][i] = int(ch.earfcn)
+        if i >= len(out["bw_mhz"]) or out["bw_mhz"][i] is None:
+            if i >= len(out["bw_mhz"]):
+                out["bw_mhz"].append(float(ch.bw_mhz))
+            else:
+                out["bw_mhz"][i] = float(ch.bw_mhz)
+        if i >= len(out["mno"]) or out["mno"][i] is None:
+            if i >= len(out["mno"]):
+                out["mno"].append(str(ch.mno))
+            else:
+                out["mno"][i] = str(ch.mno)
+    return out
+
+
 def _apply_dashboard_settings(body: DashboardConfigBody, rt: AppRuntime) -> None:
     patches = body.model_dump(exclude_unset=True)
     settings.serial_port = body.serial_port.strip() or settings.serial_port
@@ -139,7 +187,14 @@ def _apply_dashboard_settings(body: DashboardConfigBody, rt: AppRuntime) -> None
     settings.composite_smooth_samples = int(body.composite_smooth_samples)
     clamp_smooth_samples(settings)
     if body.mno_common_preset is not None:
-        set_mno_common_preset_stored_dict(copy.deepcopy(body.mno_common_preset))
+        # Normalize to fixed-length parallel arrays so Settings tab re-loads
+        # exactly what was saved (including MNO dropdown values).
+        set_mno_common_preset_stored_dict(
+            resolved_mno_common_form_dict(
+                copy.deepcopy(body.mno_common_preset),
+                settings.flows_json,
+            )
+        )
     if "band_attenuation_db" in patches and body.band_attenuation_db is not None:
         ec25_calibration.configure_band_attenuation(body.band_attenuation_db)
     for k in ("gauge_min", "gauge_max"):
@@ -607,6 +662,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 async def index(request: Request) -> HTMLResponse:
     async with runtime.lock:
         snap = _snapshot()
+        mno_form = _mno_form_from_runtime()
     channel_panels = [
         {
             "prefix": f"ch{i}",
@@ -615,10 +671,6 @@ async def index(request: Request) -> HTMLResponse:
         }
         for i in range(CHANNEL_COUNT)
     ]
-    mno_form = resolved_mno_common_form_dict(
-        get_mno_common_preset_stored_dict(),
-        settings.flows_json,
-    )
     return templates.TemplateResponse(
         request,
         "index.html",
@@ -645,6 +697,7 @@ async def index(request: Request) -> HTMLResponse:
 async def get_dashboard_config() -> dict[str, Any]:
     async with runtime.lock:
         gm, gx = (runtime.gauge_min, runtime.gauge_max)
+        mno_form = _mno_form_from_runtime()
     return {
         "ok": True,
         "serial_port": settings.serial_port,
@@ -655,15 +708,38 @@ async def get_dashboard_config() -> dict[str, Any]:
         "ws_push_hz": settings.ws_push_hz,
         "rssi_smooth_samples": settings.rssi_smooth_samples,
         "composite_smooth_samples": settings.composite_smooth_samples,
-        "mno_common_preset": resolved_mno_common_form_dict(
-            get_mno_common_preset_stored_dict(),
-            settings.flows_json,
-        ),
+        "mno_common_preset": mno_form,
         "band_attenuation_db": ec25_calibration.band_atten_dict_for_api(),
         "gauge_min": gm,
         "gauge_max": gx,
         "config_path": str(config_path()),
     }
+
+
+@app.get("/api/config/mno-common")
+async def get_mno_common_config() -> dict[str, Any]:
+    async with runtime.lock:
+        mno_form = _mno_form_from_runtime()
+    return {"ok": True, "mno_common_preset": mno_form}
+
+
+@app.post("/api/config/mno-common")
+async def post_mno_common_config(body: dict[str, Any]) -> dict[str, Any]:
+    global _mno_common_preset
+    async with runtime.lock:
+        normalized_mno = resolved_mno_common_form_dict(
+            copy.deepcopy(body),
+            settings.flows_json,
+        )
+        normalized_mno = _coalesce_mno_form_with_runtime(normalized_mno, runtime)
+        set_mno_common_preset_stored_dict(copy.deepcopy(normalized_mno))
+        _mno_common_preset = mno_preset_from_stored_dict(copy.deepcopy(normalized_mno))
+        if _mno_common_preset is not None:
+            runtime.apply_mno_common_preset(_mno_common_preset)
+        snap = _snapshot()
+    save_dashboard_config_file(settings, runtime)
+    await _broadcast()
+    return {"ok": True, "mno_common_preset": normalized_mno, **snap}
 
 
 @app.post("/api/config/dashboard")
@@ -674,8 +750,27 @@ async def post_dashboard_config(body: DashboardConfigBody) -> dict[str, Any]:
         _apply_dashboard_settings(body, runtime)
         applied_mno_runtime = False
         if body.mno_common_preset is not None:
+            normalized_mno = resolved_mno_common_form_dict(
+                copy.deepcopy(body.mno_common_preset),
+                settings.flows_json,
+            )
+            normalized_mno = _coalesce_mno_form_with_runtime(normalized_mno, runtime)
+            # Apply per-channel MNO strings directly so Settings selections are
+            # authoritative even if preset parsing drops any row.
+            mno_col = list(normalized_mno.get("mno") or [])
+            keys = channel_prefixes()
+            for i, key in enumerate(keys):
+                if i >= len(mno_col):
+                    continue
+                raw = mno_col[i]
+                if raw is None:
+                    continue
+                s = str(raw).strip()
+                if s:
+                    runtime.channels[key].mno = s
+            set_mno_common_preset_stored_dict(copy.deepcopy(normalized_mno))
             _mno_common_preset = mno_preset_from_stored_dict(
-                copy.deepcopy(body.mno_common_preset)
+                copy.deepcopy(normalized_mno)
             )
             if _mno_common_preset is not None:
                 runtime.apply_mno_common_preset(_mno_common_preset)
@@ -686,6 +781,11 @@ async def post_dashboard_config(body: DashboardConfigBody) -> dict[str, Any]:
         if not applied_mno_runtime:
             for p in channel_prefixes():
                 runtime.channels[p].sync_atten_from_band_ec25()
+        # Persist exactly what runtime now holds so Settings reload reflects
+        # per-channel values the user sees on dashboard channels.
+        runtime_mno_form = _mno_form_from_runtime()
+        set_mno_common_preset_stored_dict(copy.deepcopy(runtime_mno_form))
+        _mno_common_preset = mno_preset_from_stored_dict(copy.deepcopy(runtime_mno_form))
     save_dashboard_config_file(settings, runtime)
     conn_changed = prev != (settings.serial_port, settings.baudrate)
     if conn_changed:

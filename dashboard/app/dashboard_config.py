@@ -174,17 +174,18 @@ def clamp_smooth_samples(s: Settings) -> None:
 
 def save_dashboard_config_file(s: Settings, runtime: Any | None = None) -> None:
     path = config_path()
-    mno = get_mno_common_preset_stored_dict()
-    if mno is None and path.is_file():
+    raw_prev: dict[str, Any] = {}
+    if path.is_file():
         try:
             raw_prev = json.loads(path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             raw_prev = {}
-        else:
-            prev = raw_prev.get("mno_common_preset")
-            if isinstance(prev, dict):
-                set_mno_common_preset_stored_dict(json.loads(json.dumps(prev)))
-                mno = get_mno_common_preset_stored_dict()
+    mno = get_mno_common_preset_stored_dict()
+    if mno is None:
+        prev = raw_prev.get("mno_common_preset")
+        if isinstance(prev, dict):
+            set_mno_common_preset_stored_dict(json.loads(json.dumps(prev)))
+            mno = get_mno_common_preset_stored_dict()
     data = {
         "serial_port": s.serial_port,
         "baudrate": s.baudrate,

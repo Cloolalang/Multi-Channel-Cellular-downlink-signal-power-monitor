@@ -110,37 +110,45 @@
   }
 
   function applyMnoPresetToForm(p, rootEl) {
-    if (!p || !Array.isArray(window.__CHANNELS)) return;
+    if (!p) return;
     const root = rootEl && rootEl.querySelector ? rootEl : document;
-    const n = channelCount();
+    const bandEls = Array.from(root.querySelectorAll('.js-mno-preset[data-field="band_eutra"]'));
+    const earEls = Array.from(root.querySelectorAll('.js-mno-preset[data-field="earfcn"]'));
+    const bwEls = Array.from(root.querySelectorAll('.js-mno-preset[data-field="bw_mhz"]'));
+    const mnoEls = Array.from(root.querySelectorAll('.js-mno-preset[data-field="mno"]'));
+    const n = Math.max(bandEls.length, earEls.length, bwEls.length, mnoEls.length, channelCount());
     const band = p.band_eutra || [];
     const ear = p.earfcn || [];
     const bw = p.bw_mhz || [];
     const mno = p.mno || [];
     for (let i = 0; i < n; i++) {
-      const b = root.querySelector(`.js-mno-preset[data-field="band_eutra"][data-ch="${i}"]`);
+      const b = bandEls[i] || null;
       if (b) b.value = band[i] == null || band[i] === "" ? "" : String(band[i]);
-      const e = root.querySelector(`.js-mno-preset[data-field="earfcn"][data-ch="${i}"]`);
+      const e = earEls[i] || null;
       if (e) e.value = ear[i] == null || ear[i] === "" ? "" : String(ear[i]);
-      const bwEl = root.querySelector(`.js-mno-preset[data-field="bw_mhz"][data-ch="${i}"]`);
+      const bwEl = bwEls[i] || null;
       if (bwEl) bwEl.value = bw[i] == null || bw[i] === "" ? "" : String(bw[i]);
-      const m = root.querySelector(`.js-mno-preset[data-field="mno"][data-ch="${i}"]`);
+      const m = mnoEls[i] || null;
       if (m) m.value = mno[i] == null || mno[i] === "" ? "" : String(mno[i]);
     }
   }
 
   function collectMnoCommonPreset(formEl) {
     const root = formEl && formEl.querySelector ? formEl : document.getElementById("form-dashboard-config") || document;
-    const n = channelCount();
+    const bandEls = Array.from(root.querySelectorAll('.js-mno-preset[data-field="band_eutra"]'));
+    const earEls = Array.from(root.querySelectorAll('.js-mno-preset[data-field="earfcn"]'));
+    const bwEls = Array.from(root.querySelectorAll('.js-mno-preset[data-field="bw_mhz"]'));
+    const mnoEls = Array.from(root.querySelectorAll('.js-mno-preset[data-field="mno"]'));
+    const n = Math.max(bandEls.length, earEls.length, bwEls.length, mnoEls.length, channelCount());
     const band_eutra = [];
     const earfcn = [];
     const bw_mhz = [];
     const mno = [];
     for (let i = 0; i < n; i++) {
-      const bel = root.querySelector(`.js-mno-preset[data-field="band_eutra"][data-ch="${i}"]`);
-      const earEl = root.querySelector(`.js-mno-preset[data-field="earfcn"][data-ch="${i}"]`);
-      const bwEl = root.querySelector(`.js-mno-preset[data-field="bw_mhz"][data-ch="${i}"]`);
-      const mnoEl = root.querySelector(`.js-mno-preset[data-field="mno"][data-ch="${i}"]`);
+      const bel = bandEls[i] || null;
+      const earEl = earEls[i] || null;
+      const bwEl = bwEls[i] || null;
+      const mnoEl = mnoEls[i] || null;
       const parseIntOrNull = (el) => {
         if (!el) return null;
         const s = String(el.value).trim();
@@ -155,10 +163,28 @@
         const x = parseFloat(String(bwEl.value));
         bw_mhz.push(Number.isFinite(x) ? x : null);
       }
-      if (!mnoEl || String(mnoEl.value).trim() === "") mno.push(null);
-      else mno.push(String(mnoEl.value).trim());
+      if (!mnoEl) {
+        mno.push(null);
+      } else {
+        const val = String(mnoEl.value || "").trim();
+        const opt = mnoEl.options && mnoEl.selectedIndex >= 0 ? mnoEl.options[mnoEl.selectedIndex] : null;
+        const txt = opt ? String(opt.text || "").trim() : "";
+        const chosen = val || (txt === "— leave" ? "" : txt);
+        mno.push(chosen === "" ? null : chosen);
+      }
     }
     return { band_eutra, earfcn, bw_mhz, mno };
+  }
+
+  function syncMnoSelectValues(formEl) {
+    const root = formEl && formEl.querySelector ? formEl : document;
+    const n = channelCount();
+    for (let i = 0; i < n; i++) {
+      const m = root.querySelector(`.js-mno-preset[data-field="mno"][data-ch="${i}"]`);
+      if (!m) continue;
+      // Force normalized current value to avoid stale/empty reads on quick tab switches.
+      m.value = String(m.value || "").trim();
+    }
   }
 
   function addBandAttenRow(tb, band, db) {
@@ -382,7 +408,10 @@
         if (el.tagName === "SELECT") {
           if (field === "band_eutra") el.value = String(d.band_eutra);
           if (field === "bw_mhz") el.value = String(d.bw_mhz);
-          if (field === "mno") el.value = d.mno;
+          return;
+        }
+        if (el.type === "text" && field === "mno") {
+          el.value = d.mno ?? "";
           return;
         }
         if (el.type === "number") {
@@ -547,6 +576,7 @@
     if (!el.classList.contains("js-ch")) return;
     const ch = el.dataset.channel;
     const field = el.dataset.field;
+    if (field === "mno") return;
     const val = readChannelFieldValue(el, field);
     if (field === "atten_db" && val === null) return;
     patch(ch, { [field]: val });
@@ -642,7 +672,14 @@
               if (wh) wh.value = j.ws_push_hz ?? 4;
               if (rss) rss.value = j.rssi_smooth_samples ?? 5;
               if (css) css.value = j.composite_smooth_samples ?? 10;
-              if (j.mno_common_preset) applyMnoPresetToForm(j.mno_common_preset, f);
+              fetch("/api/config/mno-common")
+                .then((r) => r.json())
+                .then((mj) => {
+                  if (mj && mj.ok && mj.mno_common_preset) {
+                    applyMnoPresetToForm(mj.mno_common_preset, f);
+                  }
+                })
+                .catch(() => {});
               const gmn = f.querySelector('[name="cfg_gauge_min"]');
               const gmx = f.querySelector('[name="cfg_gauge_max"]');
               const setG = (el, val) => {
@@ -685,6 +722,7 @@
     if (!form) return;
     form.addEventListener("submit", (e) => {
       e.preventDefault();
+      syncMnoSelectValues(form);
       const fd = new FormData(form);
       const body = {
         serial_port: String(fd.get("serial_port") || "").trim(),
@@ -697,7 +735,6 @@
           String(fd.get("composite_smooth_samples") || "10"),
           10
         ),
-        mno_common_preset: collectMnoCommonPreset(form),
         band_attenuation_db: collectBandAttenTable(),
         gauge_min: parseCfgNullableFloat(fd.get("cfg_gauge_min")),
         gauge_max: parseCfgNullableFloat(fd.get("cfg_gauge_max")),
@@ -740,6 +777,43 @@
           }
         });
     });
+
+    const mnoBtn = document.getElementById("js-mno-preset-save");
+    const mnoStatus = document.getElementById("js-mno-preset-status");
+    if (mnoBtn) {
+      mnoBtn.addEventListener("click", () => {
+        const mnoPreset = collectMnoCommonPreset(form);
+        if (mnoStatus) {
+          mnoStatus.textContent = "Saving…";
+          mnoStatus.className = "settings-save-status";
+        }
+        fetch("/api/config/mno-common", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(mnoPreset),
+        })
+          .then((r) => r.json())
+          .then((j) => {
+            if (j && j.ok) {
+              if (j.mno_common_preset) applyMnoPresetToForm(j.mno_common_preset, form);
+              applySnap(j);
+              if (mnoStatus) {
+                mnoStatus.textContent = "MNO preset saved.";
+                mnoStatus.className = "settings-save-status is-ok";
+              }
+            } else if (mnoStatus) {
+              mnoStatus.textContent = (j && j.error) || "Save failed.";
+              mnoStatus.className = "settings-save-status is-err";
+            }
+          })
+          .catch(() => {
+            if (mnoStatus) {
+              mnoStatus.textContent = "Network error.";
+              mnoStatus.className = "settings-save-status is-err";
+            }
+          });
+      });
+    }
   })();
 
   // Live gauge scale apply (typing into Gauge min/max updates the gauges immediately).
