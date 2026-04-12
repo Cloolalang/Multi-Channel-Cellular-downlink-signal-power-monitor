@@ -93,6 +93,68 @@
     markerStroke: "#a9c8ff"
   });
 
+  // Narrow GSM channel marker on Band 8 DL (forced visible triangle).
+  drawFixedTriangleMarker({
+    lane: "DL",
+    centerFreqMhz: 939.4,
+    bandwidthMhz: 0.2,
+    label: "VF 2G 1-22",
+    fill: "#ff4d4d",
+    stroke: "#ff4d4d"
+  });
+  drawFixedTriangleMarker({
+    lane: "UL",
+    centerFreqMhz: 894.4,
+    bandwidthMhz: 0.2,
+    label: "VF 2G 1-22",
+    fill: "#ff4d4d",
+    stroke: "#ff4d4d"
+  });
+  for (let i = 0; i <= 20; i++) {
+    const freq = 935.2 + i * 0.2;
+    drawFixedTriangleMarker({
+      lane: "DL",
+      centerFreqMhz: freq,
+      bandwidthMhz: 0.2,
+      fill: "#ff4d4d",
+      stroke: "#ff4d4d"
+    });
+    drawFixedTriangleMarker({
+      lane: "UL",
+      centerFreqMhz: freq - 45,
+      bandwidthMhz: 0.2,
+      fill: "#ff4d4d",
+      stroke: "#ff4d4d"
+    });
+  }
+  for (let i = 0; i <= 12; i++) {
+    const freq = 957.4 + i * 0.2;
+    drawFixedTriangleMarker({
+      lane: "DL",
+      centerFreqMhz: freq,
+      bandwidthMhz: 0.2,
+      fill: "#3b82f6",
+      stroke: "#3b82f6"
+    });
+    drawFixedTriangleMarker({
+      lane: "UL",
+      centerFreqMhz: freq - 45,
+      bandwidthMhz: 0.2,
+      fill: "#3b82f6",
+      stroke: "#3b82f6"
+    });
+  }
+  drawMarkerGroupLabel({
+    lane: "DL",
+    centerFreqMhz: 958.6,
+    label: "VMO1 2G 112-124"
+  });
+  drawMarkerGroupLabel({
+    lane: "UL",
+    centerFreqMhz: 913.6,
+    label: "VMO1 2G 112-124"
+  });
+
   svg.appendChild(overlayLayer);
   svg.appendChild(runtimeLayer);
 
@@ -180,7 +242,7 @@
 
     const freqTxt = `${opts.freqRange[0].toFixed(1)}-${opts.freqRange[1].toFixed(1)} MHz`;
     const rightLabel = `${freqTxt} | EARFCN ${opts.earfcnRange[0]}-${opts.earfcnRange[1]}`;
-    const t = text(Math.min(WIDTH - MARGIN.right - 6, x1 + 6), opts.y + BAR_H - 2, rightLabel, "subtle-label");
+    const t = text(Math.min(WIDTH - MARGIN.right, x1 + 14), opts.y + BAR_H - 2, rightLabel, "subtle-label");
     svg.appendChild(t);
   }
 
@@ -258,6 +320,55 @@
     const mhzLabel = text(cx, flatTopY - 10, `Center ${centerFreq.toFixed(1)} MHz`, "subtle-label");
     mhzLabel.setAttribute("text-anchor", "middle");
     targetLayer.appendChild(mhzLabel);
+  }
+
+  function drawFixedTriangleMarker(cfg) {
+    const lane = cfg.lane || "DL";
+    const chart = chartByLane[lane];
+    const layout = chartLayoutByLane[lane];
+    if (!chart || !layout) return;
+
+    const centerFreq = Number(cfg.centerFreqMhz);
+    const bwMhz = Number(cfg.bandwidthMhz);
+    if (!Number.isFinite(centerFreq) || !Number.isFinite(bwMhz) || bwMhz <= 0) return;
+
+    const xCenter = toX(centerFreq, chart.freqRange[0], chart.freqRange[1]);
+    const pxPerMhz = (WIDTH - MARGIN.left - MARGIN.right) / Math.max(0.0001, chart.freqRange[1] - chart.freqRange[0]);
+    const halfBase = Math.max(4, (bwMhz * pxPerMhz) / 2);
+    const baseY = layout.barY - 2;
+    const peakY = baseY - 30;
+
+    const tri = node("polygon");
+    tri.setAttribute(
+      "points",
+      `${(xCenter - halfBase).toFixed(2)},${baseY.toFixed(2)} ` +
+      `${(xCenter + halfBase).toFixed(2)},${baseY.toFixed(2)} ` +
+      `${xCenter.toFixed(2)},${peakY.toFixed(2)}`
+    );
+    tri.setAttribute("fill", "none");
+    tri.setAttribute("stroke", cfg.stroke || "#ff9a9a");
+    tri.setAttribute("stroke-width", "1.8");
+    overlayLayer.appendChild(tri);
+
+    if (cfg.label) {
+      const label = text(xCenter, peakY - 10, cfg.label, "subtle-label");
+      label.setAttribute("text-anchor", "middle");
+      overlayLayer.appendChild(label);
+    }
+  }
+
+  function drawMarkerGroupLabel(cfg) {
+    const lane = cfg.lane || "DL";
+    const chart = chartByLane[lane];
+    const layout = chartLayoutByLane[lane];
+    if (!chart || !layout) return;
+    const centerFreq = Number(cfg.centerFreqMhz);
+    if (!Number.isFinite(centerFreq)) return;
+    const xCenter = toX(centerFreq, chart.freqRange[0], chart.freqRange[1]);
+    const y = layout.barY - 42;
+    const label = text(xCenter, y, cfg.label || "", "subtle-label");
+    label.setAttribute("text-anchor", "middle");
+    overlayLayer.appendChild(label);
   }
 
   function ulPairOffset() {

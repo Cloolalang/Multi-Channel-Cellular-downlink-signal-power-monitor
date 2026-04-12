@@ -91,7 +91,11 @@
     <label class="field">
       <span class="label">{{ w.label }}</span>
       {% if w.label == "Band" %}
-        <input type="number" class="js-ch" data-channel="{{ prefix }}" data-field="band_eutra" value="{{ sec.band_eutra }}"/>
+        <select class="js-ch" data-channel="{{ prefix }}" data-field="band_eutra">
+          {% for band in band_options %}
+            <option value="{{ band }}" {% if sec.band_eutra == band %}selected{% endif %}>{{ band }}</option>
+          {% endfor %}
+        </select>
       {% elif w.label == "DL EARFCN" %}
         <input type="number" class="js-ch" data-channel="{{ prefix }}" data-field="earfcn" value="{{ sec.earfcn }}"/>
       {% elif 'Attenuation' in w.label or 'attenuation' in w.label %}
@@ -161,7 +165,6 @@
 <section class="control-strip">
   <article class="panel control-panel">
     <h2>Controls</h2>
-    <p class="control-hint">This build targets <strong>LTE (4G)</strong> (E-UTRA / downlink FTM). Master switch and shortcuts match the Sector 1 <em>Controls</em> group from flows. Gauge min/max and segment limits are on the <strong>Settings</strong> tab. Default <code>PT_SERIAL_PORT=COM60</code>, <code>PT_MOCK_MODEM=false</code>: real modem RX parses <code>+QRXFTM</code> (2nd value = RSSI dBm). Use <code>PT_MOCK_MODEM=true</code> for development without hardware. <code>AT+QRFTESTMODE</code> runs once at startup, then one <code>AT+QRXFTM</code> per enabled channel per pass, round-robin. <code>PT_MODEM_QRXFTM_SCAN=false</code> stops auto scans. <code>PT_SCAN_CHANNEL_DELAY_SEC</code> (default 1s) spaces each channel so the modem can answer before the next TX. <code>PT_SCAN_ROUND_DELAY_SEC</code> pauses after each full pass.</p>
     <div class="control-actions">
       {% if controls_widgets|length > 0 %}
         {% for w in controls_widgets %}
@@ -348,8 +351,12 @@
               <tr>
                 <td class="settings-mno-ch">{{ i }}</td>
                 <td>
-                  <input type="number" class="js-mno-preset" data-field="band_eutra" data-ch="{{ i }}" step="1"
-                    value="{% if mno_common_form.band_eutra[i] is not none %}{{ mno_common_form.band_eutra[i] }}{% endif %}"/>
+                  <select class="js-mno-preset" data-field="band_eutra" data-ch="{{ i }}">
+                    <option value="">— leave</option>
+                    {% for band in band_options %}
+                    <option value="{{ band }}" {% if mno_common_form.band_eutra[i] is not none and mno_common_form.band_eutra[i] == band %}selected{% endif %}>{{ band }}</option>
+                    {% endfor %}
+                  </select>
                 </td>
                 <td>
                   <input type="number" class="js-mno-preset" data-field="earfcn" data-ch="{{ i }}" step="1"

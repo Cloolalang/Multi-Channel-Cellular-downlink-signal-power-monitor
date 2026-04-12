@@ -129,6 +129,37 @@
     markerStroke: "#86efac"
   });
 
+  // Band 3 GSM block (same triangle style as Band 8), 200 kHz channels.
+  // Requested span: DL 1831.8-1836.8 and paired UL 1736.8-1741.8.
+  for (let i = 0; i <= 25; i++) {
+    const dlFreq = 1831.8 + i * 0.2;
+    const ulFreq = dlFreq - 95;
+    drawFixedTriangleMarker({
+      lane: "UL",
+      centerFreqMhz: ulFreq,
+      bandwidthMhz: 0.2,
+      fill: "#22c55e",
+      stroke: "#22c55e",
+    });
+    drawFixedTriangleMarker({
+      lane: "DL",
+      centerFreqMhz: dlFreq,
+      bandwidthMhz: 0.2,
+      fill: "#22c55e",
+      stroke: "#22c55e",
+    });
+  }
+  drawMarkerGroupLabel({
+    lane: "UL",
+    centerFreqMhz: 1739.3,
+    label: "2G 645-670"
+  });
+  drawMarkerGroupLabel({
+    lane: "DL",
+    centerFreqMhz: 1834.3,
+    label: "2G 645-670"
+  });
+
   svg.appendChild(overlayLayer);
   svg.appendChild(runtimeLayer);
 
@@ -294,6 +325,55 @@
     const mhzLabel = text(cx, flatTopY - 10, `Center ${centerFreq.toFixed(1)} MHz`, "subtle-label");
     mhzLabel.setAttribute("text-anchor", "middle");
     targetLayer.appendChild(mhzLabel);
+  }
+
+  function drawFixedTriangleMarker(cfg) {
+    const lane = cfg.lane || "DL";
+    const chart = chartByLane[lane];
+    const layout = chartLayoutByLane[lane];
+    if (!chart || !layout) return;
+
+    const centerFreq = Number(cfg.centerFreqMhz);
+    const bwMhz = Number(cfg.bandwidthMhz);
+    if (!Number.isFinite(centerFreq) || !Number.isFinite(bwMhz) || bwMhz <= 0) return;
+
+    const xCenter = toX(centerFreq, chart.freqRange[0], chart.freqRange[1]);
+    const pxPerMhz = (WIDTH - MARGIN.left - MARGIN.right) / Math.max(0.0001, chart.freqRange[1] - chart.freqRange[0]);
+    const halfBase = Math.max(4, (bwMhz * pxPerMhz) / 2);
+    const baseY = layout.barY - 2;
+    const peakY = baseY - 30;
+
+    const tri = node("polygon");
+    tri.setAttribute(
+      "points",
+      `${(xCenter - halfBase).toFixed(2)},${baseY.toFixed(2)} ` +
+      `${(xCenter + halfBase).toFixed(2)},${baseY.toFixed(2)} ` +
+      `${xCenter.toFixed(2)},${peakY.toFixed(2)}`
+    );
+    tri.setAttribute("fill", "none");
+    tri.setAttribute("stroke", cfg.stroke || "#22c55e");
+    tri.setAttribute("stroke-width", "1.8");
+    overlayLayer.appendChild(tri);
+
+    if (cfg.label) {
+      const label = text(xCenter, peakY - 10, cfg.label, "subtle-label");
+      label.setAttribute("text-anchor", "middle");
+      overlayLayer.appendChild(label);
+    }
+  }
+
+  function drawMarkerGroupLabel(cfg) {
+    const lane = cfg.lane || "DL";
+    const chart = chartByLane[lane];
+    const layout = chartLayoutByLane[lane];
+    if (!chart || !layout) return;
+    const centerFreq = Number(cfg.centerFreqMhz);
+    if (!Number.isFinite(centerFreq)) return;
+    const xCenter = toX(centerFreq, chart.freqRange[0], chart.freqRange[1]);
+    const y = layout.barY - 42;
+    const label = text(xCenter, y, cfg.label || "", "subtle-label");
+    label.setAttribute("text-anchor", "middle");
+    overlayLayer.appendChild(label);
   }
 
   function ulPairOffset() {

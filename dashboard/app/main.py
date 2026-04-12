@@ -17,6 +17,7 @@ from pydantic import BaseModel, ConfigDict
 from app.flows_inventory import (
     BW_MHZ_OPTIONS,
     CHANNEL_COUNT,
+    EC25_EUTRA_BAND_OPTIONS,
     MNO_DROPDOWN_LABELS,
     MnoCommonPreset,
     VALID_CHANNEL_PREFIXES,
@@ -633,6 +634,7 @@ async def index(request: Request) -> HTMLResponse:
             "mno_common_form": mno_form,
             "mno_options": MNO_DROPDOWN_LABELS,
             "bw_mhz_options": BW_MHZ_OPTIONS,
+            "band_options": EC25_EUTRA_BAND_OPTIONS,
             "band_atten_rows": ec25_calibration.band_atten_rows_for_ui(),
             "dashboard_config_path": str(config_path()),
         },
@@ -731,6 +733,8 @@ async def patch_gauge_ranges(body: GaugeRangePatch) -> dict[str, Any]:
 async def patch_runtime(channel: str, body: ChannelPatch) -> dict[str, Any]:
     if channel not in VALID_CHANNEL_PREFIXES:
         return {"ok": False, "error": "bad channel"}
+    if body.band_eutra is not None and int(body.band_eutra) not in EC25_EUTRA_BAND_OPTIONS:
+        return {"ok": False, "error": "unsupported band selection"}
     async with runtime.lock:
         _patch_channel(channel, body)
         snap = _snapshot()

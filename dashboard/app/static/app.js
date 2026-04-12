@@ -380,6 +380,7 @@
           return;
         }
         if (el.tagName === "SELECT") {
+          if (field === "band_eutra") el.value = String(d.band_eutra);
           if (field === "bw_mhz") el.value = String(d.bw_mhz);
           if (field === "mno") el.value = d.mno;
           return;
@@ -387,7 +388,6 @@
         if (el.type === "number") {
           /* Do not clobber numeric edits while focused — WS updates can reset mid-typing. */
           if (document.activeElement === el) return;
-          if (field === "band_eutra") el.value = String(d.band_eutra);
           if (field === "earfcn") el.value = String(d.earfcn);
           if (field === "atten_db") el.value = String(d.atten_db);
         }
@@ -515,6 +515,7 @@
 
   function readChannelFieldValue(el, field) {
     if (el.type === "checkbox") return el.checked;
+    if (el.tagName === "SELECT" && field === "band_eutra") return parseInt(el.value, 10);
     if (el.tagName === "SELECT" && field === "bw_mhz") return parseFloat(el.value);
     if (el.tagName === "SELECT" && field === "mno") return el.value;
     if (el.type === "number") {

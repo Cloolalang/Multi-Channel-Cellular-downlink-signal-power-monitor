@@ -43,6 +43,7 @@ VALID_CHANNEL_PREFIXES = frozenset(channel_prefixes())
 # Defaults for settings UI / stored preset when flows have no MNO Common block.
 MNO_DROPDOWN_LABELS: tuple[str, ...] = ("Vodafone", "VMO2", "EE", "H3G")
 BW_MHZ_OPTIONS: tuple[float, ...] = (1.4, 3, 5, 10, 15, 20)
+EC25_EUTRA_BAND_OPTIONS: tuple[int, ...] = (28, 20, 8, 3, 32, 1, 40, 7)
 
 
 @dataclass(frozen=True)
