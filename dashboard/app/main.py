@@ -40,14 +40,13 @@ from app.dashboard_config import (
     save_dashboard_config_file,
     set_mno_common_preset_stored_dict,
 )
-from app.paths import deployment_root, package_dir
+from app.paths import lte_visualizer_dir, package_dir
 from app.runtime_state import AppRuntime
 from app.serial_worker import SerialWorker
 from app.settings import settings
 
 
 BASE_DIR = package_dir()
-PROJECT_DIR = deployment_root()
 runtime = AppRuntime()
 serial_worker: SerialWorker | None = None
 _reader_task: asyncio.Task | None = None
@@ -668,8 +667,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
-_lte_viz_dir = PROJECT_DIR / "lte-visualizer"
-if _lte_viz_dir.is_dir():
+_lte_viz_dir = lte_visualizer_dir()
+if _lte_viz_dir is not None:
     app.mount("/lte-viz", StaticFiles(directory=str(_lte_viz_dir)), name="lte-viz")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 

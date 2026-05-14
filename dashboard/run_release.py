@@ -2,7 +2,7 @@
 Desktop / PyInstaller entry: run Uvicorn without --reload.
 
 Build (from `dashboard/`):  pyinstaller pyinstaller.spec
-Release folder: copy repo `flows.json` next to the `.exe`; optional `lte-visualizer/` for the Bands tab.
+Release folder: copy repo `flows.json` next to the `.exe`. Bands visualiser assets are embedded in the exe when built from a repo tree that includes `lte-visualizer/`; optional sidecar `lte-visualizer/` next to the exe overrides embedded files.
 """
 from __future__ import annotations
 

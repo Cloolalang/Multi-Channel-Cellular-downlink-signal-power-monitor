@@ -189,9 +189,9 @@ You can ship a single Windows **console** executable that embeds Python and the 
 
 4. Run the exe, then open **http://127.0.0.1:8000** (bound to `127.0.0.1:8000`, no `--reload`). Close any other dashboard instance using port **8000** first (for example a dev **Uvicorn** session).
 
-The spec bundles templates and static assets. **`/lte-viz`** is mounted only if an **`lte-visualizer`** directory exists next to the exe (same rule as running from source). If the build fails with missing modules, add them under `hiddenimports` in **`dashboard/pyinstaller.spec`**. Antivirus software may slow or flag freshly built executables on first run.
+The PyInstaller **`.exe`** also embeds **`lte-visualizer`** when built from a full repo checkout (so every band tab finds **`app.js`** / **`app-band*.js`**). You can still drop an **`lte-visualizer`** folder next to the exe to override the embedded copy; remove that folder if it is incomplete (e.g. only Band 8 worked because **`app-band8.js`** was present but **`app.js`** / other band scripts were missing).
 
-**GitHub Actions:** Workflow **`Create release`** (`.github/workflows/release.yml`) builds the same exe on **Windows**, zips it with **`flows.json`**, and publishes a **GitHub Release**. Trigger it from **Actions → Create release → Run workflow** (set the tag, e.g. `v1.1.0`), or push an annotated/lightweight tag matching **`v*`** (e.g. `git tag v1.1.0 && git push origin v1.1.0`).
+**GitHub Actions:** Workflow **`Create release`** (`.github/workflows/release.yml`) builds the same exe on **Windows**, zips **`LTE-Downlink-Power-Monitor.exe`**, **`flows.json`**, and the full **`lte-visualizer/`** tree from this repo, then publishes a **GitHub Release**. Trigger it from **Actions → Create release → Run workflow** (set the tag, e.g. `v1.1.0`), or push a tag matching **`v*`** (e.g. `git tag v1.1.0 && git push origin v1.1.0`).
 
 ## Troubleshooting (common startup issues)
 

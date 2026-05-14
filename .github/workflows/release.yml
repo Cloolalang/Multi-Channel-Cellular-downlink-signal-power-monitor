@@ -38,12 +38,17 @@ jobs:
         working-directory: dashboard
         run: python -m PyInstaller pyinstaller.spec
 
-      - name: Zip exe and flows.json
+      - name: Zip exe, flows.json, and lte-visualizer
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path staging | Out-Null
           Copy-Item dashboard/dist/LTE-Downlink-Power-Monitor.exe staging/
           Copy-Item flows.json staging/
+          if (Test-Path lte-visualizer) {
+            Copy-Item -Recurse lte-visualizer staging/lte-visualizer
+          } else {
+            Write-Warning "lte-visualizer missing from checkout — Bands visualiser will be incomplete in this zip."
+          }
           $zip = "lte-downlink-power-monitor-${{ env.RELEASE_TAG }}-windows.zip"
           Compress-Archive -Path staging/* -DestinationPath $zip -Force
 

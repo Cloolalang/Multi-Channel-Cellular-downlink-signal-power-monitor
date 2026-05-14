@@ -15,6 +15,9 @@ datas = [
     (str(SPEC_DIR / "app" / "templates"), "app/templates"),
     (str(SPEC_DIR / "app" / "static"), "app/static"),
 ]
+_LTE_VIZ = SPEC_DIR.parent / "lte-visualizer"
+if _LTE_VIZ.is_dir():
+    datas.append((str(_LTE_VIZ), "lte-visualizer"))
 binaries: list = []
 hiddenimports = [
     "serial",

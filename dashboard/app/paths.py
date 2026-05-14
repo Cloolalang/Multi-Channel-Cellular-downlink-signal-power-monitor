@@ -29,3 +29,20 @@ def dashboard_state_dir() -> Path:
     if _frozen():
         return Path(sys.executable).resolve().parent
     return package_dir().parent
+
+
+def lte_visualizer_dir() -> Path | None:
+    """
+    Static LTE band HTML/JS next to `flows.json`, or embedded under PyInstaller `_MEIPASS/lte-visualizer`.
+    Sidecar folder wins when present so installs can override bundled assets.
+    """
+    sidecar = deployment_root() / "lte-visualizer"
+    if sidecar.is_dir():
+        return sidecar
+    if _frozen():
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass:
+            bundled = Path(meipass) / "lte-visualizer"
+            if bundled.is_dir():
+                return bundled
+    return None
