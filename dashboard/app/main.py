@@ -663,7 +663,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Multi-Channel LTE (4G) Downlink Signal Power Monitor",
-    version="1.1",
+    version="1.1.1",
     lifespan=lifespan,
 )
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")

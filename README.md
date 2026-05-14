@@ -2,7 +2,9 @@
 
 ![Dashboard example](dashexample.JPG)
 
-**Version:** 1.1  
+**Version:** 1.1.1  
+
+**Changes in 1.1.1:** Full **`lte-visualizer`** tree bundled inside the PyInstaller **`.exe`** (with sidecar override) and included in the **GitHub release zip**, so every Bands visualiser tab finds **`app.js`** / **`app-band*.js`**; lighter WebSocket updates during `AT+QRXFTM` scans; CI uses Node **24**–compatible action versions.
 
 **Changes in 1.1:** Tighter real-modem `AT+QRXFTM` pacing (minimum interval between transmits—avoids stacking a fixed sleep on top of modem latency). Centralized path resolution for frozen **PyInstaller** builds; optional Windows `.exe` package (see [Standalone executable (PyInstaller)](#standalone-executable-pyinstaller)).
 
@@ -191,7 +193,7 @@ You can ship a single Windows **console** executable that embeds Python and the 
 
 The PyInstaller **`.exe`** also embeds **`lte-visualizer`** when built from a full repo checkout (so every band tab finds **`app.js`** / **`app-band*.js`**). You can still drop an **`lte-visualizer`** folder next to the exe to override the embedded copy; remove that folder if it is incomplete (e.g. only Band 8 worked because **`app-band8.js`** was present but **`app.js`** / other band scripts were missing).
 
-**GitHub Actions:** Workflow **`Create release`** (`.github/workflows/release.yml`) builds the same exe on **Windows**, zips **`LTE-Downlink-Power-Monitor.exe`**, **`flows.json`**, and the full **`lte-visualizer/`** tree from this repo, then publishes a **GitHub Release**. Trigger it from **Actions → Create release → Run workflow** (set the tag, e.g. `v1.1.0`), or push a tag matching **`v*`** (e.g. `git tag v1.1.0 && git push origin v1.1.0`).
+**GitHub Actions:** Workflow **`Create release`** (`.github/workflows/release.yml`) builds the same exe on **Windows**, zips **`LTE-Downlink-Power-Monitor.exe`**, **`flows.json`**, and the full **`lte-visualizer/`** tree from this repo, then publishes a **GitHub Release**. Trigger it from **Actions → Create release → Run workflow** (set the tag, e.g. `v1.1.1`), or push a tag matching **`v*`** (e.g. `git tag v1.1.1 && git push origin v1.1.1`).
 
 ## Troubleshooting (common startup issues)
 
