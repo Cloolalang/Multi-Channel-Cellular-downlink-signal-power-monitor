@@ -15,9 +15,10 @@ jobs:
   windows-exe:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      # Node 24 runtimes (see GitHub deprecation of Node 20 actions)
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -39,7 +40,7 @@ jobs:
           Compress-Archive -Path staging/* -DestinationPath "lte-downlink-power-monitor-${{ github.event.inputs.tag }}-windows.zip" -Force
 
       - name: Publish GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.event.inputs.tag }}
           name: ${{ github.event.inputs.tag }}
