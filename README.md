@@ -4,7 +4,9 @@
 
 **Version:** 1.1  
 
-**Changes in 1.1:** Tighter real-modem `AT+QRXFTM` pacing (minimum interval between transmits—avoids stacking a fixed sleep on top of modem latency). Centralized path resolution for frozen **PyInstaller** builds; optional Windows `.exe` package (see [Standalone executable (PyInstaller)](#standalone-executable-pyinstaller)). This build targets **LTE (4G)** only—**E-UTRA** downlink factory test mode (`AT+QRXFTM` / `AT+QRFTESTMODE`). It is **not** aimed at NR (5G) stacks.
+**Changes in 1.1:** Tighter real-modem `AT+QRXFTM` pacing (minimum interval between transmits—avoids stacking a fixed sleep on top of modem latency). Centralized path resolution for frozen **PyInstaller** builds; optional Windows `.exe` package (see [Standalone executable (PyInstaller)](#standalone-executable-pyinstaller)).
+
+**Scope:** This build targets **LTE (4G)** only—**E-UTRA** downlink factory test mode (`AT+QRXFTM` / `AT+QRFTESTMODE`). It is **not** aimed at NR (5G) stacks.
 
 This repository is a small stack for RF / modem bench work. The active web app is a **FastAPI** dashboard under `dashboard/` that talks to a Quectel modem over serial (or a mock for UI development), syncs layout from `flows.json`, and pushes live state over WebSockets.
 
@@ -188,6 +190,8 @@ You can ship a single Windows **console** executable that embeds Python and the 
 4. Run the exe, then open **http://127.0.0.1:8000** (bound to `127.0.0.1:8000`, no `--reload`). Close any other dashboard instance using port **8000** first (for example a dev **Uvicorn** session).
 
 The spec bundles templates and static assets. **`/lte-viz`** is mounted only if an **`lte-visualizer`** directory exists next to the exe (same rule as running from source). If the build fails with missing modules, add them under `hiddenimports` in **`dashboard/pyinstaller.spec`**. Antivirus software may slow or flag freshly built executables on first run.
+
+**GitHub Actions:** Workflow **`Create release`** (`.github/workflows/release.yml`) builds the same exe on **Windows**, zips it with **`flows.json`**, and publishes a **GitHub Release**. Trigger it from **Actions → Create release → Run workflow** (set the tag, e.g. `v1.1.0`), or push an annotated/lightweight tag matching **`v*`** (e.g. `git tag v1.1.0 && git push origin v1.1.0`).
 
 ## Troubleshooting (common startup issues)
 
