@@ -1,0 +1,2 @@
+# Optional: build standalone executable (see README “Standalone executable”).
+pyinstaller>=6.3.0

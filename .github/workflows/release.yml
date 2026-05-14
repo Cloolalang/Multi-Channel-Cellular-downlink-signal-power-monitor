@@ -1,0 +1,49 @@
+name: Create release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Git tag and release name (e.g. v1.1.0)"
+        required: true
+        default: "v1.1.0"
+
+permissions:
+  contents: write
+
+jobs:
+  windows-exe:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r dashboard/requirements.txt -r dashboard/requirements-build.txt
+
+      - name: PyInstaller build
+        working-directory: dashboard
+        run: python -m PyInstaller pyinstaller.spec
+
+      - name: Zip exe and flows.json
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path staging | Out-Null
+          Copy-Item dashboard/dist/LTE-Downlink-Power-Monitor.exe staging/
+          Copy-Item flows.json staging/
+          Compress-Archive -Path staging/* -DestinationPath "lte-downlink-power-monitor-${{ github.event.inputs.tag }}-windows.zip" -Force
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag }}
+          name: ${{ github.event.inputs.tag }}
+          files: lte-downlink-power-monitor-${{ github.event.inputs.tag }}-windows.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

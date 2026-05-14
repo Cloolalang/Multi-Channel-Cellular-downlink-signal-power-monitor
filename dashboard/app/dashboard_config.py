@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from app import ec25_calibration
+from app.paths import dashboard_state_dir
 
 if TYPE_CHECKING:
     from app.settings import Settings
@@ -29,7 +30,7 @@ def set_mno_common_preset_stored_dict(d: dict[str, Any] | None) -> None:
 
 
 def config_path() -> Path:
-    return Path(__file__).resolve().parent.parent / _CONFIG_NAME
+    return dashboard_state_dir() / _CONFIG_NAME
 
 
 def consume_channels_state_from_file() -> dict[str, Any] | None:

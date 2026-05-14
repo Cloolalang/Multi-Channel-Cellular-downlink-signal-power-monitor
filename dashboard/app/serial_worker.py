@@ -53,7 +53,8 @@ class SerialWorker:
             try:
                 import serial
 
-                self.ser = serial.Serial(self.port, self.baud, timeout=0.05)
+                # Short timeout keeps readline responsive without busy-spinning the executor thread.
+                self.ser = serial.Serial(self.port, self.baud, timeout=0.08)
             except Exception as e:
                 async with self.runtime.lock:
                     self.runtime.at_log.append(f"[serial] open failed: {e!r}, using echo-only")
@@ -82,13 +83,12 @@ class SerialWorker:
 
     async def reader_loop(self) -> None:
         """Read modem lines (OK, ERROR, +CME ERROR, URCs) into at_log."""
-        loop = asyncio.get_event_loop()
         while True:
             if self.mock or self.ser is None:
                 await asyncio.sleep(0.4)
                 continue
             try:
-                raw = await loop.run_in_executor(None, self._read_line_blocking)
+                raw = await asyncio.to_thread(self._read_line_blocking)
             except Exception as e:
                 async with self.runtime.lock:
                     self.runtime.at_log.append(f"[serial read] {e!r}")
@@ -129,14 +129,13 @@ class SerialWorker:
                 # Serial failed to open: silently discard — scan loop backs off so this
                 # queue should be empty in normal operation.
                 continue
-            loop = asyncio.get_event_loop()
             try:
 
                 def _w() -> None:
                     self.ser.write(line.encode("utf-8", errors="replace"))
                     self.ser.flush()
 
-                await loop.run_in_executor(None, _w)
+                await asyncio.to_thread(_w)
                 async with self.runtime.lock:
                     self.runtime.at_log.append(f"> sent {len(line)} B: {line!r}")
             except Exception as e:

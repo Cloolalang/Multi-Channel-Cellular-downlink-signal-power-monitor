@@ -1,7 +1,7 @@
 {
     "name": "multi-channel-cellular-downlink-signal-power-monitor",
     "description": "Multi-Channel Cellular Downlink Signal Power Monitor (Node-RED flows)",
-    "version": "1.0.0-beta",
+    "version": "1.1.0",
     "private": true,
     "dependencies": {
         "@korve/node-red-convert-unit": "~0.0.2",

@@ -5,7 +5,6 @@ import copy
 import json
 import time
 from contextlib import asynccontextmanager
-from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
@@ -41,13 +40,14 @@ from app.dashboard_config import (
     save_dashboard_config_file,
     set_mno_common_preset_stored_dict,
 )
+from app.paths import deployment_root, package_dir
 from app.runtime_state import AppRuntime
 from app.serial_worker import SerialWorker
 from app.settings import settings
 
 
-BASE_DIR = Path(__file__).resolve().parent
-PROJECT_DIR = BASE_DIR.parent.parent
+BASE_DIR = package_dir()
+PROJECT_DIR = deployment_root()
 runtime = AppRuntime()
 serial_worker: SerialWorker | None = None
 _reader_task: asyncio.Task | None = None
@@ -469,7 +469,7 @@ async def _channel_measurement_loop() -> None:
     async with runtime.lock:
         runtime.at_log.append(
             "[mc-dspm] AT+QRXFTM round-robin: one command per enabled channel per pass; "
-            f"PT_SCAN_CHANNEL_DELAY_SEC={settings.scan_channel_delay_sec}s between channels."
+            f"PT_SCAN_CHANNEL_DELAY_SEC={settings.scan_channel_delay_sec}s min interval between transmits."
         )
     while True:
         try:
@@ -492,15 +492,19 @@ async def _channel_measurement_loop() -> None:
                     enabled_channels_in_round += 1
                     runtime.scan_active_channel = p
                 await _broadcast()
+                step_started = time.perf_counter()
                 ok, _ = await _enqueue_qrxftm(p, f"scan {p}")
                 if ok:
                     any_sent = True
                     sent_channels_in_round += 1
                     # On real modem: wait for +QRXFTM to be consumed (or timeout) before advancing.
                     if (not settings.mock_modem) and sw.ser is not None:
+                        chan_delay = float(settings.scan_channel_delay_sec or 0.0)
+                        # Allow enough time for URC + trailing OK without tying the cap solely to chan_delay
+                        # (small PT_SCAN_CHANNEL_DELAY_SEC should still permit a full modem round-trip).
                         got_consumed = await _await_qrxftm_consumed(
                             p,
-                            timeout_sec=max(0.2, float(settings.scan_channel_delay_sec or 0.0) + 0.8),
+                            timeout_sec=max(0.45, chan_delay + 0.55, 1.1),
                         )
                         if not got_consumed:
                             ftm_restricted = False
@@ -526,9 +530,11 @@ async def _channel_measurement_loop() -> None:
                                     )
                             if need_rearm:
                                 await _try_rearm_ftm("restricted to FTM")
-                        # Optional extra pacing after consumption (keeps modem calm on some FW).
-                        if settings.scan_channel_delay_sec > 0:
-                            await asyncio.sleep(settings.scan_channel_delay_sec)
+                        # Enforce minimum spacing between AT+QRXFTM transmits (remaining time only).
+                        if chan_delay > 0:
+                            pad = chan_delay - (time.perf_counter() - step_started)
+                            if pad > 0:
+                                await asyncio.sleep(pad)
             async with runtime.lock:
                 runtime.scan_active_channel = None
                 # Count only full scan rounds across enabled channels, not per step.
@@ -656,11 +662,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Multi-Channel LTE (4G) Downlink Signal Power Monitor",
-    version="1.0-beta",
+    version="1.1",
     lifespan=lifespan,
 )
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
-app.mount("/lte-viz", StaticFiles(directory=str(PROJECT_DIR / "lte-visualizer")), name="lte-viz")
+_lte_viz_dir = PROJECT_DIR / "lte-visualizer"
+if _lte_viz_dir.is_dir():
+    app.mount("/lte-viz", StaticFiles(directory=str(_lte_viz_dir)), name="lte-viz")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 

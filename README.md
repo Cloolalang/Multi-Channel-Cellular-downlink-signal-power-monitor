@@ -2,9 +2,9 @@
 
 ![Dashboard example](dashexample.JPG)
 
-**Version:** 1.0 beta  
+**Version:** 1.1  
 
-**Scope:** This build targets **LTE (4G)** only—**E-UTRA** downlink factory test mode (`AT+QRXFTM` / `AT+QRFTESTMODE`). It is **not** aimed at NR (5G) stacks.
+**Changes in 1.1:** Tighter real-modem `AT+QRXFTM` pacing (minimum interval between transmits—avoids stacking a fixed sleep on top of modem latency). Centralized path resolution for frozen **PyInstaller** builds; optional Windows `.exe` package (see [Standalone executable (PyInstaller)](#standalone-executable-pyinstaller)). This build targets **LTE (4G)** only—**E-UTRA** downlink factory test mode (`AT+QRXFTM` / `AT+QRFTESTMODE`). It is **not** aimed at NR (5G) stacks.
 
 This repository is a small stack for RF / modem bench work. The active web app is a **FastAPI** dashboard under `dashboard/` that talks to a Quectel modem over serial (or a mock for UI development), syncs layout from `flows.json`, and pushes live state over WebSockets.
 
@@ -38,8 +38,8 @@ The reference bench setup uses a **large fixed RF power attenuator** between the
    cd Multi-Channel-Cellular-downlink-signal-power-monitor
    ```
 
-   - `flows.json` at the **repository root**
-   - `dashboard/` next to it (the app resolves `flows.json` relative to that folder)
+   - `flows.json` at the **repository root** when running from source (or **next to the `.exe`** for a PyInstaller build)
+   - `dashboard/` next to it for development (the app resolves assets and config relative to [deployment rules](#project-layout-short))
    - if copying via Google Drive/ZIP, keep the full `dashboard/app/` tree (especially `templates/` and `static/`)
 
 2. **Create a virtual environment** (recommended):
@@ -104,14 +104,14 @@ set PT_MOCK_MODEM=
 | `PT_WS_PUSH_HZ` | `4` | WebSocket snapshot cadence (Hz) |
 | `PT_RSSI_SMOOTH_SAMPLES` | `5` | Rolling window (samples) for per-channel RSSI avg/SD gauges and charts (1–64) |
 | `PT_COMPOSITE_SMOOTH_SAMPLES` | `10` | Rolling window over composite dBm for composite avg/SD and charts (1–512) |
-| `PT_SCAN_CHANNEL_DELAY_SEC` | `1` | Delay between `AT+QRXFTM` per channel on real serial (0 = no pause; may miss RSSI) |
+| `PT_SCAN_CHANNEL_DELAY_SEC` | `1` | Minimum seconds between consecutive `AT+QRXFTM` transmits per channel step on real serial (`0` = back-to-back; may miss RSSI) |
 | `PT_SCAN_ROUND_DELAY_SEC` | `0` | Pause after each full channel round before the next |
 | `PT_MODEM_PREP_QRFTESTMODE` | `true` | Run `AT+QRFTESTMODE` prep after opening the port |
 | `PT_MODEM_PREP_DELAY_SEC` | `2` | Delay used in that prep sequence |
 | `PT_MODEM_QRXFTM_SCAN` | `true` | Continuous round-robin `AT+QRXFTM` per enabled channel |
 | `PT_FLOWS_JSON` | *(auto)* | Override path to `flows.json` if needed |
 
-Environment values are merged at startup; **`dashboard/dashboard_config.json`** (written from the **Settings** tab) overrides connection and UI/runtime tuning for that install and is **reloaded on every app restart**.  
+Environment values are merged at startup; **`dashboard/dashboard_config.json`** when running from source (or **`dashboard_config.json` next to the `.exe`** for a PyInstaller build—written from the **Settings** tab) overrides connection and UI/runtime tuning for that install and is **reloaded on every app restart**.  
 `PT_MOCK_MODEM` is **environment/CLI only** (not persisted by the dashboard settings file).
 
 ### Settings tab (`dashboard_config.json`)
@@ -159,6 +159,35 @@ uvicorn app.main:app --reload
 ```
 
 (PowerShell: `$env:PT_MOCK_MODEM="true"`)
+
+## Standalone executable (PyInstaller)
+
+You can ship a single Windows **console** executable that embeds Python and the dashboard. Runtime files **`flows.json`** (required) and optional **`lte-visualizer/`** (for the Bands visualiser tab) live **next to the `.exe`**, not inside it.
+
+1. Install runtime and build tools:
+
+   ```powershell
+   cd C:\path\to\Powertest\dashboard
+   python -m pip install -r requirements.txt
+   python -m pip install -r requirements-build.txt
+   ```
+
+2. Build (uses `dashboard/pyinstaller.spec`):
+
+   ```powershell
+   pyinstaller pyinstaller.spec
+   ```
+
+3. Prepare a **release folder** for another PC:
+
+   - Copy **`dist\LTE-Downlink-Power-Monitor.exe`**
+   - Copy the repo’s **`flows.json`** into the same folder as the exe
+   - Optional: copy **`lte-visualizer\`** from the repo root so `/lte-viz/...` URLs work
+   - Optional: add **`.env`** beside the exe (`PT_*` variables); the launcher sets the process working directory to the exe folder so Pydantic finds it
+
+4. Run the exe, then open **http://127.0.0.1:8000** (bound to `127.0.0.1:8000`, no `--reload`). Close any other dashboard instance using port **8000** first (for example a dev **Uvicorn** session).
+
+The spec bundles templates and static assets. **`/lte-viz`** is mounted only if an **`lte-visualizer`** directory exists next to the exe (same rule as running from source). If the build fails with missing modules, add them under `hiddenimports` in **`dashboard/pyinstaller.spec`**. Antivirus software may slow or flag freshly built executables on first run.
 
 ## Troubleshooting (common startup issues)
 
@@ -221,8 +250,11 @@ The main dashboard can still run without it.
 | Path | Role |
 |------|------|
 | `dashboard/app/` | FastAPI app, templates, static assets, serial worker |
-| `flows.json` | Widget / flow metadata consumed by the dashboard |
-| `dashboard/dashboard_config.json` | Local UI/settings persistence (gitignored) |
+| `dashboard/run_release.py` | Entry script used by PyInstaller (`uvicorn`, no reload) |
+| `dashboard/pyinstaller.spec` | PyInstaller recipe (Windows-oriented one-file exe) |
+| `flows.json` | Widget / flow metadata consumed by the dashboard (repo root in dev; beside `.exe` when frozen) |
+| `dashboard/dashboard_config.json` | Local UI/settings persistence when running from source (gitignored) |
+| `dashboard_config.json` | Same file beside **`LTE-Downlink-Power-Monitor.exe`** when using the frozen build |
 
 ## Quectel documentation (references)
 

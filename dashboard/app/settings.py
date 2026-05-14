@@ -3,11 +3,17 @@ from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.paths import deployment_root
+
+
+def _default_flows_json() -> Path:
+    return deployment_root() / "flows.json"
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="PT_", env_file=".env", extra="ignore")
 
-    flows_json: Path = Path(__file__).resolve().parents[2] / "flows.json"
+    flows_json: Path = Field(default_factory=_default_flows_json)
     serial_port: str = "COM60"
     baudrate: int = 115200
     # Set PT_MOCK_MODEM=true for UI dev without hardware (synthetic RSSI + fake OK on TX).
@@ -17,8 +23,10 @@ class Settings(BaseSettings):
     rssi_smooth_samples: int = Field(default=5, ge=1, le=64)
     # Rolling window over composite dBm for composite avg/sd and composite charts.
     composite_smooth_samples: int = Field(default=10, ge=1, le=512)
-    # Minimum pause after each AT+QRXFTM before the next channel (lets modem finish +URC).
-    # Set PT_SCAN_CHANNEL_DELAY_SEC=0 to disable (may desync or miss RSSI if too fast).
+    # Minimum wall-clock interval between consecutive AT+QRXFTM sends (per enabled channel step).
+    # Previously implemented as an extra sleep after the modem already replied, which stacked with
+    # latency; now treated as a floor between transmits. Set PT_SCAN_CHANNEL_DELAY_SEC=0 to send
+    # back-to-back (may desync or miss RSSI on some firmware).
     scan_channel_delay_sec: float = 1.0
     # After opening a real serial port, send AT+QRFTESTMODE=0, wait, then AT+QRFTESTMODE=1 (Sector 1 deploy inject).
     modem_prep_qrftestmode: bool = True
