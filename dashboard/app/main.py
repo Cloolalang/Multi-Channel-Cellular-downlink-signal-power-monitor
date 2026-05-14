@@ -291,13 +291,15 @@ async def _try_rearm_ftm(reason: str) -> bool:
 
 
 async def _broadcast() -> None:
-    dead: list[WebSocket] = []
-    payload = json.dumps(_snapshot())
-    for ws in ws_clients:
-        try:
-            await ws.send_text(payload)
-        except Exception:
-            dead.append(ws)
+    clients = list(ws_clients)
+    if not clients:
+        return
+    payload = json.dumps(_snapshot(), separators=(",", ":"))
+    results = await asyncio.gather(
+        *[ws.send_text(payload) for ws in clients],
+        return_exceptions=True,
+    )
+    dead = [clients[i] for i, r in enumerate(results) if isinstance(r, BaseException)]
     for ws in dead:
         if ws in ws_clients:
             ws_clients.remove(ws)
@@ -491,7 +493,7 @@ async def _channel_measurement_loop() -> None:
                         continue
                     enabled_channels_in_round += 1
                     runtime.scan_active_channel = p
-                await _broadcast()
+                # Avoid a full WebSocket snapshot per channel: _tick_loop already broadcasts at ws_push_hz.
                 step_started = time.perf_counter()
                 ok, _ = await _enqueue_qrxftm(p, f"scan {p}")
                 if ok:
@@ -693,7 +695,7 @@ async def index(request: Request) -> HTMLResponse:
             "composite_widgets": _widgets_composite,
             "controls_widgets": _widgets_controls,
             "snap": snap,
-            "snap_json": json.dumps(snap),
+            "snap_json": json.dumps(snap, separators=(",", ":")),
             "settings": settings,
             "channel_prefixes": channel_prefixes(),
             "channel_indices": list(range(CHANNEL_COUNT)),
@@ -925,7 +927,7 @@ async def websocket_endpoint(ws: WebSocket) -> None:
     await ws.accept()
     ws_clients.append(ws)
     try:
-        await ws.send_text(json.dumps(_snapshot()))
+        await ws.send_text(json.dumps(_snapshot(), separators=(",", ":")))
         while True:
             await ws.receive_text()
     except WebSocketDisconnect:
