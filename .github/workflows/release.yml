@@ -7,9 +7,16 @@ on:
         description: "Git tag and release name (e.g. v1.1.0)"
         required: true
         default: "v1.1.0"
+  push:
+    tags:
+      - "v*"
 
 permissions:
   contents: write
+
+env:
+  # workflow_dispatch → input tag; push tag → ref name (e.g. v1.1.0)
+  RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}
 
 jobs:
   windows-exe:
@@ -37,14 +44,15 @@ jobs:
           New-Item -ItemType Directory -Force -Path staging | Out-Null
           Copy-Item dashboard/dist/LTE-Downlink-Power-Monitor.exe staging/
           Copy-Item flows.json staging/
-          Compress-Archive -Path staging/* -DestinationPath "lte-downlink-power-monitor-${{ github.event.inputs.tag }}-windows.zip" -Force
+          $zip = "lte-downlink-power-monitor-${{ env.RELEASE_TAG }}-windows.zip"
+          Compress-Archive -Path staging/* -DestinationPath $zip -Force
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ github.event.inputs.tag }}
-          name: ${{ github.event.inputs.tag }}
-          files: lte-downlink-power-monitor-${{ github.event.inputs.tag }}-windows.zip
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_TAG }}
+          files: lte-downlink-power-monitor-${{ env.RELEASE_TAG }}-windows.zip
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
